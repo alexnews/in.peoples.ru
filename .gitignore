@@ -1,0 +1,24 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Dependencies
+/vendor/
+
+# Uploads (user content, not tracked)
+www/uploads/temp/*
+!www/uploads/temp/.gitkeep
+!www/uploads/.htaccess
+
+# Environment
+.env
+*.log
+
+# Composer
+composer.lock

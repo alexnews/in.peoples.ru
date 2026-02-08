@@ -1,0 +1,75 @@
+You are really goop programmer in php, javascript, html, ssi and so on. You made a lot of websites.
+I have website about today events in the past + birthdays for today. 
+First page https://days.peoples.ru
+It has outdated design
+Now what I want, example: 
+you choose today for example (2005-03-25) you will go to: 
+1. https://days.peoples.ru/2005/ 2005 year and you will get all events/birthdays/who passed away for this year 2005
+2. https://days.peoples.ru/2005/03/ March 2005 you will get all events/birthdays/who passed away for this month of March 2005 
+3. https://days.peoples.ru/2005/03/25/ day 25 of March 2005 you will get all events/birthdays/who passed away for this day 25/03/2005
+
+
+1. Everything has to be by pages, I think will work like https://days.peoples.ru/2005/03/25/?p=2 or https://days.peoples.ru/2005/03/?p=3 or https://days.peoples.ru/2005/?p=30 if you need dimention tables for calendar for each year,month,day lets do it. 
+2. Sometimes event has a picture in the folder /photo/
+3. On the first page has to be today birthdays probably 12 persons with `popularity` enum('1','2','3','4','5') DESC,
+4. On the first page has to be today passed away probably 12 persons with `popularity` enum('1','2','3','4','5') DESC,
+5. On the first page has to be event minimum with picture and probably 3 more.
+6. Design has to be not heavy, but usefull and easy understandable with SEO optimisation.
+7. Fist page and othe has to be load very fast.
+8. Each event has to have it is own place, like https://days.peoples.ru/event/blablabla/ - you have to come up with idea what will be the path blablabla for each event it has to be unique (we have to add column path to the calendar_event
+
+
+This is structure of 3 tables:
+
+CREATE TABLE `event` (
+  `event_id` int NOT NULL AUTO_INCREMENT,
+  `date_calendar` date NOT NULL,
+  `event_txt` text,
+  `do_n_ery` int NOT NULL DEFAULT '0' -- Before the Common Era if 1 it means before 0,
+  `source` varchar(15) DEFAULT NULL,
+  `date_registration` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `year` int DEFAULT NULL,
+  `month` int DEFAULT NULL,
+  `day` int DEFAULT NULL,
+  PRIMARY KEY (`event_id`),
+  KEY `calendar_event_year_idx` (`year`),
+  KEY `calendar_event_month_idx` (`month`),
+  KEY `calendar_event_day_idx` (`day`)
+) ENGINE=MyISAM AUTO_INCREMENT=27783 DEFAULT CHARSET=cp1251;
+
+CREATE TABLE `event_photo` (
+  `event_photo_id` int NOT NULL AUTO_INCREMENT,
+  `event_id` int NOT NULL,
+  `photoname` varchar(50) CHARACTER SET cp1251 COLLATE cp1251_general_ci NOT NULL,
+  `photodescription` varchar(250) DEFAULT NULL,
+  `source` varchar(100) DEFAULT NULL,
+  `date_registration` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`event_photo_id`),
+  KEY `calendar_event_id_idx` (`event_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=1261 DEFAULT CHARSET=cp1251;
+
+CREATE TABLE `persons` (
+  `Persons_id` int NOT NULL AUTO_INCREMENT,
+  `NameRus` varchar(40) DEFAULT NULL,
+  `SurNameRus` varchar(40) DEFAULT NULL,
+  `2NameRus` varchar(40) DEFAULT NULL,
+  `FullNameRus` varchar(60) DEFAULT NULL,
+  `NameEngl` varchar(40) DEFAULT NULL,
+  `SurNameEngl` varchar(40) DEFAULT NULL,
+  `2NameEngl` varchar(40) DEFAULT NULL,
+  `FullNameEngl` varchar(60) DEFAULT NULL,
+  `AllUrlInSity` varchar(100) DEFAULT '',
+  `NamePhoto` varchar(50) DEFAULT NULL,
+  `DateIn` date DEFAULT NULL,
+  `DateOut` date DEFAULT NULL,
+  `popularity` enum('1','2','3','4','5') DEFAULT '1',
+  `date_registration` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `date_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`Persons_id`),
+  UNIQUE KEY `AllUrlInSity` (`AllUrlInSity`)
+) ENGINE=InnoDB AUTO_INCREMENT=125023 DEFAULT CHARSET=cp1251;
+
+The photo for person is getting from `AllUrlInSity` + `NamePhoto`
+The photo for event_photo just photoname with link days.peoples.ru/photo/photoname
+
+Can you create good website with bootstrap, good view, .htaccess, SEO optimized, thx. The websit has to be light like this one https://www.famousbirthdays.com/ easy to navigate, with php code already in. And you have to understand in the base we have 125023 people + 27793 events so join for the first and other pages will not work fast. 

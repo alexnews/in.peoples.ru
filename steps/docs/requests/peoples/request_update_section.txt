@@ -1,0 +1,232 @@
+I need MySQL script with events for this task:
+
+CREATE TABLE `peoples_section` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nameRus` varchar(100) NOT NULL,
+  `nameEng` varchar(100) NOT NULL,
+  `path` varchar(250) NOT NULL,
+  `linkToPic` varchar(200) DEFAULT NULL,
+  `id_user` int DEFAULT '1',
+  `date_registration` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `table_name` varchar(50) DEFAULT NULL,
+  `total` int DEFAULT NULL,
+  `onpage` int DEFAULT '20',
+  `working` char(1) DEFAULT 'N' COMMENT 'working project or not',
+  `date_field` varchar(30) DEFAULT 'date_registration',
+  `count_by` varchar(30) DEFAULT '*',
+  `maximum` int NOT NULL,
+  `id_name` varchar(20) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_aphorism_section_nameRus` (`nameRus`),
+  UNIQUE KEY `uq_aphorism_section_nameEng` (`nameEng`),
+  UNIQUE KEY `uq_aphorism_section_path` (`path`),
+  UNIQUE KEY `uq_aphorism_section_linkToPic` (`linkToPic`)
+) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=cp1251;
+
+CREATE TABLE `peoples_section_history` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `peoples_section_id` int NOT NULL,
+  `total` int DEFAULT NULL,
+  `date_add` date NOT NULL,
+  `date_registration` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `peoples_section_history_unq` (`peoples_section_id`,`date_add`)
+) ENGINE=InnoDB AUTO_INCREMENT=61429 DEFAULT CHARSET=cp1251;
+
+INSERT INTO `peoples_section` (`id`, `nameRus`, `nameEng`, `path`, `linkToPic`, `id_user`, `date_registration`, `table_name`, `total`, `onpage`, `working`, `date_field`, `count_by`, `maximum`, `id_name`)
+VALUES
+    ('1', 'Люди', 'People', 'person', NULL, '1', '2016-06-24 17:14:29', 'persons', '117776', '20', 'Y', 'date_registration', '*', '119081', 'Persons_id'),
+    ('2', 'Истории', 'Histories', 'histories', NULL, '1', '2016-06-24 17:14:51', 'histories', '155114', '20', 'Y', 'date_pub', '*', '451771', 'Histories_id'),
+    ('3', 'Фотографии', 'Photos', 'photo', NULL, '1', '2016-06-24 17:15:25', 'photo', '552037', '20', 'Y', 'date_registration', '*', '5347105', 'Photo_id'),
+    ('4', 'Новости', 'News', 'news', NULL, '1', '2016-06-24 17:16:58', 'news', '83936', '21', 'Y', 'date_registration', '*', '91063', 'id'),
+    ('5', 'Форум', 'Forum', 'forum', NULL, '1', '2016-06-24 17:19:59', 'peoples_forum', '64549', '15', 'Y', 'date_registration', '*', '78397', 'id'),
+    ('6', 'Поиск', 'Search', 'search', NULL, '1', '2016-06-24 17:20:47', 'peoples_search', '271403', '20', 'Y', 'date_registration', '*', '2465771', 'id'),
+    ('7', 'Песни', 'Lyrics', 'songs', NULL, '1', '2016-06-24 17:23:56', 'songs', '471069', '20', 'Y', 'date_registration', '*', '695429', 'id'),
+    ('8', 'Мир фактов', 'Facts', 'facts', NULL, '1', '2016-06-24 17:27:40', 'Facts', '23158', '15', 'Y', 'date_registration', '*', '23234', 'Facts_id'),
+    ('9', 'Назад в прошлое', 'Old photos', 'old', NULL, '1', '2016-06-24 17:28:58', 'photo', NULL, '20', 'N', 'date_registration', '*', '0', 'Photo_id'),
+    ('10', 'Работы', 'Work', 'works', NULL, '1', '2016-06-24 17:29:33', 'photo', NULL, '20', 'N', 'date_registration', '*', '0', 'Photo_id'),
+    ('11', 'Кино', 'Movie', 'movie', NULL, '1', '2016-06-24 17:31:09', 'films', '29638', '20', 'Y', 'date_registration', '*', '29896', 'id'),
+    ('12', 'Кино форум', 'Movie Forum', 'movie_forum', NULL, '1', '2016-06-24 17:31:41', 'films_forum', '1727', '20', 'N', 'date_registration', '*', '0', 'id'),
+    ('13', 'Интересное', 'Interesting', 'friday', NULL, '1', '2016-06-24 17:38:25', 'interesting', '3873', '16', 'Y', 'date_registration', '*', '3938', 'id'),
+    ('14', 'Интересные фото', 'Interesting Photos', 'interesting_photo', NULL, '1', '2016-06-24 17:39:10', 'interesting_photo', '59793', '20', 'Y', 'date_registration', '*', '59847', 'id'),
+    ('15', 'Фаны', 'Fans', 'fans', NULL, '1', '2016-06-24 17:42:23', 'peoples_fan', '5097', '10', 'Y', 'date_registration', '*', '5351', 'id'),
+    ('16', 'Подброка Новостей c других источников', 'Fresh News', 'freshnews', NULL, '1', '2016-06-24 17:45:33', 'peoples_news_total', '196307', '30', 'Y', 'date_registration', '*', '3037469', 'id'),
+    ('17', 'Упоминание знаменитостей', 'Celebrity in News', 'freshnews/celebrity.php', NULL, '1', '2016-06-24 17:47:13', 'peoples_news_celebrity', '2811263', '40', 'Y', 'date_registration', '*', '3213469', 'id'),
+    ('18', 'Фотографии домов', 'Celtbrity Houses', 'house', NULL, '1', '2016-06-24 17:55:33', 'photo_house', '611', '20', 'N', 'date_registration', '*', '0', 'id'),
+    ('19', 'Стихи', 'Poetry', 'poetry', NULL, '1', '2016-06-24 17:56:26', 'poetry', '37543', '20', 'Y', 'date_registration', '*', '38157', 'id'),
+    ('20', 'Список людей из рейтингов', 'Top Celebrities', 'awards/list/', NULL, '1', '2016-06-24 17:59:01', 'top', '1491', '20', 'Y', 'date_registration', '*', '1508', 'topId'),
+    ('21', 'Видео людей', 'Video Celebrity', 'video', NULL, '1', '2016-06-24 18:01:12', 'histories', '8745', '25', 'Y', 'date_registration', 'youtube', '451771', 'Histories_id'),
+    ('22', 'Гороскоп', 'Horoscope', 'horoscope', NULL, '1', '2016-06-24 20:55:40', 'horoscope', '427', '20', 'Y', 'date_registration', '*', '126', 'horoscope_sign_id'),
+    ('23', 'Больше чем фото', 'More then photo', 'photos', NULL, '1', '2016-06-24 20:58:33', 'peoples_veryinteresting', '249', '20', 'N', 'date_registration', '*', '0', 'id'),
+    ('24', 'Вопрос-Ответ', 'Questions-Answers', 'qa', NULL, '1', '2016-06-25 00:34:02', 'interestingly', '588', '20', 'N', 'date_registration', '*', '0', 'id'),
+    ('25', 'События', 'Events', 'events', NULL, '1', '2018-04-04 18:21:27', 'Calendar_Event', '24950', '20', 'N', 'date_registration', '*', '0', NULL),
+    ('26', 'Исполнители песен', 'performers', 'performer', NULL, '1', '2018-04-13 23:23:59', 'persons', '5016', '20', 'Y', 'date_registration', 'songs', '119081', 'Persons_id'),
+    ('27', 'Книги', 'Books', 'books', NULL, '1', '2018-04-23 23:06:31', 'books', '0', '20', 'Y', 'date_registration', '*', '0', 'id'),
+    ('28', 'Города рождений', 'Cities of birth', '/city/index-born.php', NULL, '1', '2018-05-10 17:59:37', 'peoples_data_stat_cityborn', '5996', '25', 'Y', 'date_registration', 'name', '5996', 'id'),
+    ('29', 'Цитаты', 'Aphorism', 'aphorism', NULL, '1', '2018-04-13 23:23:59', 'peoples_data_stat_aphorism', '296372', '20', 'Y', 'date_registration', '*', '0', 'id'),
+    ('30', 'Quotes', 'Quotes', 'quotes', NULL, '1', '2018-04-13 23:23:59', 'peoples_data_stat_quotes', '761392', '20', 'Y', 'date_registration', '*', '1805650', 'id'),
+    ('31', 'Анекдоты', 'Jokes', 'anekdot', NULL, '1', '2018-04-13 23:23:59', 'peoples_data_stat_anekdot', '75713', '20', 'Y', 'date_registration', '*', '828382', 'Anekdot_id'),
+    ('32', 'Рейтинги', 'Top Awards List', 'awards', NULL, '1', '2020-06-24 17:59:01', 'topAwards', '30', '20', 'Y', 'date_registration', '*', '30', 'topAwardId'),
+    ('34', 'Возможное упоминание знаменитостей', 'Possible Celebrity in News', 'freshnews/dictionary.php', NULL, '1', '2016-06-24 17:47:13', 'peoples_news_dictionary', '807164', '40', 'Y', 'date_registration', '*', '807165', 'id'),
+    ('35', 'Города где умерли', 'Celebrity Cities died', '/city/index-died.php', NULL, '1', '2018-05-10 17:59:37', 'peoples_data_stat_citydied', '0', '25', 'Y', 'date_registration', 'name', '0', 'id'),
+    ('36', 'Старые фотографии', 'Vintage Photo', 'vintage', NULL, '1', '2020-09-18 23:10:24', 'photo', '94', '20', 'Y', 'date_registration', 'year', '5347105', 'Photo_id'),
+    ('37', 'Тэги', 'Tags', 'tags', NULL, '1', '2020-10-23 05:19:18', 'histories_tag', '1197127', '40', 'Y', 'date_registration', '*', '1197127', 'id'),
+    ('38', 'Имена', 'Names', 'names', NULL, '1', '2025-05-10 23:05:09', NULL, NULL, '20', 'N', 'date_registration', '*', '1', NULL);
+
+
+I need 1. add old count (total) and date_add to the  peoples_section_history. 
+2. Count each section 
+for example UPDATE 1st record: 
+SELECT id AS section_id,COOUNT(DISTINCT(Persons_id)) AS mm FROM persons; 
+INSERT INTO peoples_section_history (`peoples_section_id`,`total`,`date_add`) SELECT 1,mm,now();
+UPDATE peoples_section SET maximum = mm WHERE id = 1
+
+
+
+-- Enable event scheduler if not already enabled
+-- SET GLOBAL event_scheduler = ON;
+
+-- Create stored procedure for safe section counting
+DELIMITER //
+
+CREATE PROCEDURE UpdateSectionStats()
+BEGIN
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE v_section_id INT;
+    DECLARE v_table_name VARCHAR(50);
+    DECLARE v_count_by VARCHAR(30);
+    DECLARE v_id_name VARCHAR(20);
+    DECLARE v_date_field VARCHAR(30);
+    DECLARE v_working CHAR(1);
+    DECLARE v_count INT DEFAULT 0;
+    DECLARE v_sql TEXT;
+    DECLARE v_error_msg TEXT;
+    
+    -- Cursor to iterate through active sections
+    DECLARE section_cursor CURSOR FOR 
+        SELECT id, table_name, count_by, id_name, date_field, working
+        FROM peoples_section 
+        WHERE working = 'Y' 
+        AND table_name IS NOT NULL 
+        AND table_name != '';
+    
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION 
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1
+        v_error_msg = MESSAGE_TEXT;
+        -- Log error (you might want to create an error log table)
+        INSERT IGNORE INTO peoples_section_errors (section_id, error_message, error_date) 
+        VALUES (v_section_id, v_error_msg, NOW());
+    END;
+    
+    OPEN section_cursor;
+    
+    read_loop: LOOP
+        FETCH section_cursor INTO v_section_id, v_table_name, v_count_by, v_id_name, v_date_field, v_working;
+        
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+        
+        -- Validate table name to prevent SQL injection
+        -- Only allow alphanumeric characters and underscores
+        IF v_table_name REGEXP '^[a-zA-Z0-9_]+$' THEN
+            
+            -- Build count query based on count_by field
+            IF v_count_by = '*' THEN
+                SET v_sql = CONCAT('SELECT COUNT(*) INTO @temp_count FROM `', v_table_name, '`');
+            ELSEIF v_count_by = 'songs' AND v_id_name IS NOT NULL THEN
+                -- Special case for performers (count songs per person)
+                SET v_sql = CONCAT('SELECT COUNT(DISTINCT s.id) INTO @temp_count FROM songs s 
+                                   INNER JOIN `', v_table_name, '` p ON s.', v_id_name, ' = p.', v_id_name);
+            ELSEIF v_count_by = 'youtube' THEN
+                -- Special case for video count
+                SET v_sql = CONCAT('SELECT COUNT(*) INTO @temp_count FROM `', v_table_name, '` 
+                                   WHERE youtube IS NOT NULL AND youtube != \'\'');
+            ELSEIF v_count_by = 'year' THEN
+                -- Special case for vintage photos
+                SET v_sql = CONCAT('SELECT COUNT(*) INTO @temp_count FROM `', v_table_name, '` 
+                                   WHERE year IS NOT NULL AND year > 0');
+            ELSEIF v_count_by = 'name' THEN
+                -- Special case for cities
+                SET v_sql = CONCAT('SELECT COUNT(DISTINCT name) INTO @temp_count FROM `', v_table_name, '`');
+            ELSEIF v_id_name IS NOT NULL THEN
+                -- Count distinct by specific ID field
+                SET v_sql = CONCAT('SELECT COUNT(DISTINCT `', v_id_name, '`) INTO @temp_count FROM `', v_table_name, '`');
+            ELSE
+                -- Default count
+                SET v_sql = CONCAT('SELECT COUNT(*) INTO @temp_count FROM `', v_table_name, '`');
+            END IF;
+            
+            -- Execute the count query
+            SET @temp_count = 0;
+            SET @sql_stmt = v_sql;
+            PREPARE stmt FROM @sql_stmt;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+            
+            SET v_count = @temp_count;
+            
+            -- Insert into history (avoid duplicates for same day)
+            INSERT INTO peoples_section_history (peoples_section_id, total, date_add, date_registration)
+            VALUES (v_section_id, v_count, CURDATE(), NOW())
+            ON DUPLICATE KEY UPDATE 
+                total = v_count, 
+                date_registration = NOW();
+            
+            -- Update current total and maximum in peoples_section
+            UPDATE peoples_section 
+            SET total = v_count,
+                maximum = GREATEST(COALESCE(maximum, 0), v_count)
+            WHERE id = v_section_id;
+            
+        END IF;
+        
+    END LOOP;
+    
+    CLOSE section_cursor;
+    
+END//
+
+DELIMITER ;
+
+-- Create error logging table (optional but recommended)
+CREATE TABLE IF NOT EXISTS `peoples_section_errors` (
+    `id` int NOT NULL AUTO_INCREMENT,
+    `section_id` int DEFAULT NULL,
+    `error_message` text,
+    `error_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `idx_section_date` (`section_id`, `error_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Create the daily event
+CREATE EVENT IF NOT EXISTS `daily_section_stats_update`
+ON SCHEDULE EVERY 1 DAY
+STARTS TIMESTAMP(CURDATE()) + INTERVAL 1 DAY + INTERVAL 2 HOUR  -- Run at 2 AM daily
+ON COMPLETION PRESERVE
+ENABLE
+COMMENT 'Daily update of section statistics'
+DO
+  CALL UpdateSectionStats();
+
+-- Create an hourly event for more frequent updates (optional)
+CREATE EVENT IF NOT EXISTS `hourly_section_stats_update`
+ON SCHEDULE EVERY 1 HOUR
+STARTS NOW() + INTERVAL 1 HOUR
+ON COMPLETION PRESERVE
+ENABLE
+COMMENT 'Hourly update of section statistics for active monitoring'
+DO
+  CALL UpdateSectionStats();
+
+-- Manual execution example (run this once to populate initial data)
+-- CALL UpdateSectionStats();
+
+-- Verify events are created
+-- SHOW EVENTS;
+
+-- Example queries to check results:
+-- SELECT * FROM peoples_section_history ORDER BY date_add DESC, peoples_section_id LIMIT 20;
+-- SELECT id, nameRus, total, maximum FROM peoples_section WHERE working = 'Y' ORDER BY total DESC;

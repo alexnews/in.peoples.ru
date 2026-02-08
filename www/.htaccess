@@ -1,0 +1,26 @@
+RewriteEngine On
+
+# Force HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://in.peoples.ru/$1 [R=301,L]
+
+# Disable directory listing
+Options -Indexes
+
+# Block common bots
+RewriteCond %{HTTP_USER_AGENT} (Mediatoolkitbot|PetalBot|ClaudeBot|GPTBot|Bytespider|AhrefsBot|SemrushBot) [NC]
+RewriteRule .* - [F,L]
+
+# Pass through real files and directories
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# API routing: /api/v1/auth/login -> /api/v1/auth/login.php
+RewriteRule ^api/v1/(.+)/([^/]+)$ /api/v1/$1/$2.php [L,QSA]
+
+# Clean URLs for user portal
+RewriteRule ^user/([^/]+)$ /user/$1.php [L,QSA]
+
+# Clean URLs for moderation panel
+RewriteRule ^moderate/([^/]+)$ /moderate/$1.php [L,QSA]

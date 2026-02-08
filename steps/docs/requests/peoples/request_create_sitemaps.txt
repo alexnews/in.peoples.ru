@@ -1,0 +1,1 @@
+I need you to create sitemaps probable generate static once, because dinamic sitemaps killing database performance. Can you come up with idea? you have mine working scripts, section of the all parts of the website and I'll provide you all my working scripts.

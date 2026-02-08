@@ -1,0 +1,54 @@
+/
+├── index.php              # Homepage with today's events and birthdays
+├── day.php                # Page for specific day (day/month)
+├── year.php               # Page for specific year
+├── person.php             # Individual person profile
+├── search.php             # Search functionality
+├── about.php              # About the website
+├── contact.php            # Contact information
+├── .htaccess              # URL rewriting and optimization
+├── robots.txt             # SEO directives for search engines
+├── sitemap.xml            # XML sitemap for search engines
+├── assets/
+│   ├── css/               # Style sheets
+│   │   ├── bootstrap.min.css
+│   │   └── custom.css     # Custom styles
+│   ├── js/                # JavaScript files
+│   │   ├── bootstrap.min.js
+│   │   ├── jquery.min.js
+│   │   └── custom.js      # Custom scripts
+│   ├── fonts/             # Font files (if any)
+│   └── img/               # Static images for the website
+├── includes/
+│   ├── header.php         # Common header
+│   ├── footer.php         # Common footer
+│   ├── nav.php            # Navigation menu
+│   ├── sidebar.php        # Sidebar with popular content
+│   ├── config.php         # Database configuration
+│   └── functions.php      # Common PHP functions
+└── admin/                 # Admin area (optional, for content management)
+    ├── index.php          # Admin dashboard
+    ├── add-event.php      # Add new event
+    ├── add-person.php     # Add new person
+    └── manage-content.php # Manage existing content
+
+
+/admin/
+├── index.php                # Admin dashboard/login page
+├── events.php               # Manage events
+├── add-event.php            # Add new event
+├── edit-event.php           # Edit existing event
+├── delete-event.php         # Delete event
+├── persons.php              # Manage persons
+├── add-person.php           # Add new person
+├── edit-person.php          # Edit existing person
+├── delete-person.php        # Delete person
+├── uploads.php              # Manage photo uploads
+├── users.php                # Manage admin users
+├── settings.php             # Website settings
+└── includes/
+    ├── admin-header.php     # Admin header template
+    ├── admin-footer.php     # Admin footer template
+    ├── admin-sidebar.php    # Admin sidebar navigation
+    ├── admin-functions.php  # Admin-specific functions
+    └── auth.php             # Authentication functions

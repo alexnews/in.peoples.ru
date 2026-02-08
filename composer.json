@@ -1,0 +1,19 @@
+{
+    "name": "alexnews/in-peoples-ru",
+    "description": "Community platform for peoples.ru",
+    "type": "project",
+    "require": {
+        "php": ">=8.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "InPeoples\\": "www/includes/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Alex Kargin",
+            "email": "alex@peoples.ru"
+        }
+    ]
+}

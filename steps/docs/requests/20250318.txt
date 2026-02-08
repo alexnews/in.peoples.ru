@@ -1,0 +1,52 @@
+I have a page on website, where I want to make comments for users.
+this is the form:
+
+                    <div class="right-item">
+                        <h2>Live your comment</h2>
+                        <div class="enquery-form">
+                            <form action="" method="post">
+                                <div class="mb-3">
+                                    <input type="text" class="form-control" placeholder="Name" />
+                                </div>
+                                <div class="mb-3">
+                                    <input type="email" class="form-control" placeholder="Email" />
+                                </div>
+                                <div class="mb-3">
+                                    <input type="text" class="form-control" placeholder="Title" />
+                                </div>
+                                <div class="mb-3">
+                                    <textarea class="form-control h-150" rows="3" placeholder="Message"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <button type="submit" class="btn btn-primary">
+                                        Send
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+This is the table:
+
+KodPersons I have from query
+id_art I'll provide from news_id
+section_id I'll provide for news it is = 4
+
+CREATE TABLE `peoples_forum` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `KodPersons` int DEFAULT NULL,
+  `id_art` int DEFAULT NULL,
+  `section_id` int NOT NULL DEFAULT '0',
+  `NameAuthor` varchar(50) NOT NULL DEFAULT '',
+  `EmailAuthor` varchar(50) DEFAULT NULL,
+  `Title` varchar(100) DEFAULT NULL,
+  `Message` text NOT NULL,
+  `date_registration` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `id_user` int DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=79271 DEFAULT CHARSET=cp1251;
+
+So what I need:
+1. send through this form
+2. form has to be protected by javascript from sending by scripts messages
+3. meggase has to go in the table peoples_forum
