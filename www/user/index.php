@@ -117,8 +117,8 @@ $statusBadge = [
 <div class="row g-3 mb-4">
     <div class="col-6 col-md-3">
         <a href="/user/submit.php?section=2" class="quick-action">
-            <i class="bi bi-book"></i>
-            <span>Биография</span>
+            <i class="bi bi-file-text"></i>
+            <span>Статьи</span>
         </a>
     </div>
     <div class="col-6 col-md-3">
@@ -135,32 +135,32 @@ $statusBadge = [
     </div>
     <div class="col-6 col-md-3">
         <a href="/user/submit.php?section=5" class="quick-action">
-            <i class="bi bi-chat-quote"></i>
-            <span>Цитаты</span>
+            <i class="bi bi-chat-dots"></i>
+            <span>Форум</span>
         </a>
     </div>
     <div class="col-6 col-md-3">
         <a href="/user/submit.php?section=7" class="quick-action">
+            <i class="bi bi-music-note-beamed"></i>
+            <span>Песни</span>
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="/user/submit.php?section=8" class="quick-action">
             <i class="bi bi-lightbulb"></i>
             <span>Факты</span>
         </a>
     </div>
     <div class="col-6 col-md-3">
-        <a href="/user/submit.php?section=8" class="quick-action">
-            <i class="bi bi-star"></i>
-            <span>Интересное</span>
-        </a>
-    </div>
-    <div class="col-6 col-md-3">
         <a href="/user/submit.php?section=19" class="quick-action">
-            <i class="bi bi-file-text"></i>
-            <span>Статьи</span>
+            <i class="bi bi-pen"></i>
+            <span>Стихи</span>
         </a>
     </div>
     <div class="col-6 col-md-3">
-        <a href="/user/submit.php" class="quick-action" style="border-style:dashed;color:var(--text-muted)">
-            <i class="bi bi-three-dots"></i>
-            <span>Другое</span>
+        <a href="/user/suggest-person.php" class="quick-action" style="border-style:dashed;">
+            <i class="bi bi-person-plus"></i>
+            <span>Предложить персону</span>
         </a>
     </div>
 </div>
