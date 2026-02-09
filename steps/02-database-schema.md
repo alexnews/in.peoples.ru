@@ -137,6 +137,10 @@ CREATE TABLE user_person_suggestions (
     cc2dead             CHAR(2) DEFAULT NULL,
     cc2                 CHAR(2) DEFAULT NULL,
 
+    -- Article fields
+    title               VARCHAR(500) DEFAULT NULL,  -- Article title (Заголовок)
+    epigraph            VARCHAR(1000) DEFAULT NULL,  -- Short description / who is this person
+
     -- Content
     biography           MEDIUMTEXT DEFAULT NULL,    -- Biography text written by user
     source_url          VARCHAR(500) DEFAULT NULL,

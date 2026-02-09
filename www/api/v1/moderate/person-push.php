@@ -68,9 +68,12 @@ try {
         ? $nameEngl . ' ' . $surNameEngl
         : '';
 
-    // Build epigraph from first 200 chars of biography
     $biography = $suggestion['biography'] ?? '';
-    $epigraph = mb_substr($biography, 0, 200, 'UTF-8');
+    $title     = $suggestion['title'] ?? '';
+    // Use user-provided epigraph, fall back to first 200 chars of biography
+    $epigraph  = !empty($suggestion['epigraph'])
+        ? $suggestion['epigraph']
+        : mb_substr($biography, 0, 200, 'UTF-8');
 
     // INSERT into persons table with approve='NO'
     // Admin will set AllUrlInSity, path, KodStructure separately
@@ -110,13 +113,14 @@ try {
 
     // INSERT biography into histories
     $bioStmt = $db->prepare(
-        'INSERT INTO histories (KodPersons, Content, Epigraph, date_pub)
-         VALUES (:kod, :content, :epigraph, NOW())'
+        'INSERT INTO histories (KodPersons, Content, Epigraph, NameURLArticle, date_pub)
+         VALUES (:kod, :content, :epigraph, :title, NOW())'
     );
     $bioStmt->execute([
         ':kod'      => $newPersonId,
         ':content'  => toDb($biography),
         ':epigraph' => toDb($epigraph),
+        ':title'    => !empty($title) ? toDb($title) : null,
     ]);
 
     $historiesId = (int) $db->lastInsertId();

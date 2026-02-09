@@ -32,6 +32,8 @@ $values = [
     'cc2born'     => '',
     'cc2dead'     => '',
     'cc2'         => '',
+    'title'       => '',
+    'epigraph'    => '',
     'description' => '',
     'source_url'  => '',
 ];
@@ -50,6 +52,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         if (mb_strlen($values['NameRus'], 'UTF-8') < 2) {
             $errors['NameRus'] = 'Укажите имя на русском (минимум 2 символа)';
+        }
+        if (mb_strlen($values['title'], 'UTF-8') < 3) {
+            $errors['title'] = 'Укажите заголовок (минимум 3 символа)';
         }
         if (mb_strlen($values['description'], 'UTF-8') < 50) {
             $errors['description'] = 'Опишите биографию подробнее (минимум 50 символов)';
@@ -79,12 +84,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     (user_id, NameRus, SurNameRus, NameEngl, SurNameEngl,
                      DateIn, DateOut, gender, TownIn,
                      cc2born, cc2dead, cc2,
-                     biography, source_url, status, created_at, updated_at)
+                     title, epigraph, biography, source_url,
+                     status, created_at, updated_at)
                  VALUES
                     (:uid, :nameRus, :surNameRus, :nameEngl, :surNameEngl,
                      :dateIn, :dateOut, :gender, :townIn,
                      :cc2born, :cc2dead, :cc2,
-                     :biography, :source_url, \'pending\', NOW(), NOW())'
+                     :title, :epigraph, :biography, :source_url,
+                     \'pending\', NOW(), NOW())'
             );
             $stmt->execute([
                 ':uid'         => $userId,
@@ -99,6 +106,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':cc2born'     => $values['cc2born'] !== '' ? strtoupper($values['cc2born']) : null,
                 ':cc2dead'     => $values['cc2dead'] !== '' ? strtoupper($values['cc2dead']) : null,
                 ':cc2'         => $values['cc2'] !== '' ? strtoupper($values['cc2']) : null,
+                ':title'       => toDb($values['title']),
+                ':epigraph'    => $values['epigraph'] !== '' ? toDb($values['epigraph']) : null,
                 ':biography'   => toDb($values['description']),
                 ':source_url'  => $values['source_url'] !== '' ? toDb($values['source_url']) : null,
             ]);
@@ -261,16 +270,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </div>
 
+            <!-- Title -->
+            <div class="mb-3">
+                <label for="title" class="form-label">Заголовок <span class="text-danger">*</span></label>
+                <input type="text" class="form-control <?= isset($errors['title']) ? 'is-invalid' : '' ?>"
+                       id="title" name="title"
+                       value="<?= htmlspecialchars($values['title'], ENT_QUOTES, 'UTF-8') ?>"
+                       placeholder="Введите заголовок" required>
+                <?php if (isset($errors['title'])): ?>
+                <div class="invalid-feedback"><?= htmlspecialchars($errors['title'], ENT_QUOTES, 'UTF-8') ?></div>
+                <?php endif; ?>
+            </div>
+
+            <!-- Epigraph -->
+            <div class="mb-3">
+                <label for="epigraph" class="form-label">Эпиграф / краткое описание</label>
+                <textarea class="form-control" id="epigraph" name="epigraph" rows="2"
+                          placeholder="Краткое описание или эпиграф (необязательно)"><?= htmlspecialchars($values['epigraph'], ENT_QUOTES, 'UTF-8') ?></textarea>
+                <div class="form-text">Например: «Советский кинорежиссёр, сценарист»</div>
+            </div>
+
             <!-- Biography -->
             <div class="mb-3">
-                <label for="description" class="form-label">Биография <span class="text-danger">*</span></label>
+                <label for="description" class="form-label">Содержание <span class="text-danger">*</span></label>
                 <textarea class="form-control <?= isset($errors['description']) ? 'is-invalid' : '' ?>"
                           id="description" name="description" rows="6"
                           placeholder="Напишите биографию персоны (минимум 50 символов)..."><?= htmlspecialchars($values['description'], ENT_QUOTES, 'UTF-8') ?></textarea>
                 <?php if (isset($errors['description'])): ?>
                 <div class="invalid-feedback"><?= htmlspecialchars($errors['description'], ENT_QUOTES, 'UTF-8') ?></div>
                 <?php endif; ?>
-                <div class="form-text">Минимум 50 символов. Опишите, чем известен этот человек.</div>
+                <div class="form-text">Минимум 50 символов. Напишите биографию персоны.</div>
             </div>
 
             <!-- Source URL -->
@@ -298,6 +327,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <li>Укажите фамилию и имя на русском — обязательно</li>
                     <li>Английское написание поможет при поиске</li>
                     <li>Коды стран — 2 латинские буквы (RU, US, GB, DE и т.п.)</li>
+                    <li>Заголовок — название статьи о персоне</li>
+                    <li>Эпиграф — кратко, кто это (например: «Актёр, режиссёр»)</li>
                     <li>Напишите биографию минимум 50 символов</li>
                     <li>По возможности укажите ссылку на Википедию</li>
                 </ul>
