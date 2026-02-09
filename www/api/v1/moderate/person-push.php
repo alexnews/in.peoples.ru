@@ -102,9 +102,37 @@ try {
 
     // Build AllUrlInSity and path from structure + person name
     $structureUrl = trim($structure['URL'] ?? '', '/');  // e.g. "art/cinema/producer"
-    $personSlug = transliteratePersonName($nameRus, $surNameRus);  // e.g. "tabita-dzhekson"
+
+    // Use custom slug if admin provided one (from the preview step),
+    // otherwise prefer English name, fall back to transliterated Russian
+    $customSlug = $suggestion['_custom_slug'] ?? '';
+    if (empty($customSlug)) {
+        // Check if custom_slug was passed in the request
+        $rawInput = json_decode(file_get_contents('php://input'), true);
+        $customSlug = trim($rawInput['custom_slug'] ?? '');
+    }
+
+    if (!empty($customSlug)) {
+        $personSlug = strtolower($customSlug);
+        $personSlug = preg_replace('/[^a-z0-9\-]+/', '-', $personSlug) ?? $personSlug;
+        $personSlug = trim($personSlug, '-');
+    } elseif ($nameEngl !== '' && $surNameEngl !== '') {
+        $personSlug = strtolower($nameEngl . ' ' . $surNameEngl);
+        $personSlug = preg_replace('/[^a-z0-9]+/', '-', $personSlug) ?? $personSlug;
+        $personSlug = trim($personSlug, '-');
+    } else {
+        $personSlug = transliteratePersonName($nameRus, $surNameRus);
+    }
+
     $allUrlInSity = 'https://www.peoples.ru/' . $structureUrl . '/' . $personSlug . '/';
-    $personPath = $personSlug . '_' . str_replace('/', '_', $structureUrl);  // e.g. "tabita-dzhekson_art_cinema_producer"
+    $personPath = $personSlug . '_' . str_replace('/', '_', $structureUrl);
+
+    // Verify uniqueness
+    $checkStmt = $db->prepare("SELECT COUNT(*) FROM persons WHERE AllUrlInSity = :url");
+    $checkStmt->execute([':url' => toDb($allUrlInSity)]);
+    if ((int) $checkStmt->fetchColumn() > 0) {
+        jsonError('URL ' . $allUrlInSity . ' already exists. Use the preview to pick a unique slug.', 'DUPLICATE_URL', 400);
+    }
 
     // INSERT into persons table with approve='NO'
     $personStmt = $db->prepare(

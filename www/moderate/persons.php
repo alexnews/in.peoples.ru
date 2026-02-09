@@ -260,31 +260,57 @@ require_once __DIR__ . '/includes/header.php';
             <?php endif; ?>
 
             <?php if ($st === 'approved' && $isAdmin && empty($sug['published_person_id'])): ?>
-            <div class="mt-3">
+            <div class="mt-3" id="push-panel-<?= (int)$sug['id'] ?>">
                 <div class="alert alert-info py-2 px-3 mb-2 small">
                     <i class="bi bi-info-circle me-1"></i>
-                    Модератор одобрил содержание. Выберите раздел, проверьте дубликаты и нажмите «Создать персону».
+                    Модератор одобрил содержание. Выберите раздел и проверьте URL.
                 </div>
-                <div class="mb-2">
-                    <label class="form-label small fw-bold mb-1">Раздел на сайте <span class="text-danger">*</span></label>
-                    <select class="form-select form-select-sm structure-select" id="structure-<?= (int)$sug['id'] ?>">
-                        <option value="">— Выберите раздел —</option>
-                        <?php foreach ($structureOptions as $opt): ?>
-                        <option value="<?= (int)$opt['Structure_id'] ?>">
-                            <?= htmlspecialchars(trim($opt['NameURL'], ' >'), ENT_QUOTES, 'UTF-8') ?>
-                        </option>
-                        <?php endforeach; ?>
-                    </select>
+
+                <!-- Step 1: Choose structure + check -->
+                <div class="row g-2 mb-2">
+                    <div class="col">
+                        <select class="form-select form-select-sm structure-select" id="structure-<?= (int)$sug['id'] ?>">
+                            <option value="">— Выберите раздел —</option>
+                            <?php foreach ($structureOptions as $opt): ?>
+                            <option value="<?= (int)$opt['Structure_id'] ?>">
+                                <?= htmlspecialchars(trim($opt['NameURL'], ' >'), ENT_QUOTES, 'UTF-8') ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <button type="button" class="btn btn-sm btn-outline-primary person-check-btn"
+                                data-id="<?= (int)$sug['id'] ?>">
+                            <i class="bi bi-search me-1"></i>Проверить URL
+                        </button>
+                    </div>
                 </div>
-                <div class="d-flex gap-2 align-items-center">
-                    <button type="button" class="btn btn-sm btn-primary person-push-btn"
-                            data-id="<?= (int)$sug['id'] ?>">
-                        <i class="bi bi-plus-circle me-1"></i>Создать персону в базе
-                    </button>
-                    <a href="/api/v1/persons/search.php?q=<?= urlencode($sug['SurNameRus'] ?? '') ?>"
-                       target="_blank" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-search me-1"></i>Поиск дубликатов
-                    </a>
+
+                <!-- Step 2: Preview (hidden until check) -->
+                <div id="preview-<?= (int)$sug['id'] ?>" style="display:none;">
+                    <div class="card card-body py-2 px-3 mb-2 small">
+                        <div class="mb-1"><strong>URL:</strong> <code id="preview-url-<?= (int)$sug['id'] ?>"></code></div>
+                        <div id="conflicts-<?= (int)$sug['id'] ?>"></div>
+                        <div class="mt-1">
+                            <label class="form-label small mb-1">Slug (можно изменить):</label>
+                            <div class="input-group input-group-sm">
+                                <input type="text" class="form-control" id="slug-<?= (int)$sug['id'] ?>" placeholder="person-slug">
+                                <button type="button" class="btn btn-outline-secondary person-recheck-btn" data-id="<?= (int)$sug['id'] ?>">
+                                    Перепроверить
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 align-items-center">
+                        <button type="button" class="btn btn-sm btn-primary person-push-btn"
+                                data-id="<?= (int)$sug['id'] ?>">
+                            <i class="bi bi-plus-circle me-1"></i>Создать персону в базе
+                        </button>
+                        <a href="/api/v1/persons/search.php?q=<?= urlencode($sug['SurNameRus'] ?? '') ?>"
+                           target="_blank" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-search me-1"></i>Поиск в базе
+                        </a>
+                    </div>
                 </div>
             </div>
             <?php endif; ?>
@@ -375,20 +401,114 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Admin push to persons table
+    // Step 1: Check slug / preview URL
+    function checkSlug(id, customSlug) {
+        var structSelect = document.getElementById('structure-' + id);
+        var kodStructure = structSelect ? structSelect.value : '';
+
+        if (!kodStructure) {
+            alert('Сначала выберите раздел.');
+            if (structSelect) structSelect.focus();
+            return;
+        }
+
+        var body = {
+            suggestion_id: parseInt(id),
+            kod_structure: parseInt(kodStructure),
+            csrf_token: csrfToken
+        };
+        if (customSlug) body.custom_slug = customSlug;
+
+        fetch('/api/v1/moderate/person-check-slug.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body)
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data.success) {
+                alert(data.error?.message || 'Ошибка');
+                return;
+            }
+            var d = data.data;
+            var preview = document.getElementById('preview-' + id);
+            var urlEl = document.getElementById('preview-url-' + id);
+            var slugInput = document.getElementById('slug-' + id);
+            var conflictsEl = document.getElementById('conflicts-' + id);
+
+            preview.style.display = 'block';
+            urlEl.textContent = d.full_url;
+            slugInput.value = d.slug;
+
+            // Show conflicts
+            var html = '';
+            if (d.conflicts.length > 0) {
+                html += '<div class="text-danger mb-1"><i class="bi bi-exclamation-triangle me-1"></i>';
+                html += d.exact_match ? '<strong>URL уже занят!</strong>' : 'Похожие URL в базе:';
+                html += '</div><ul class="mb-1 ps-3 small">';
+                d.conflicts.forEach(function(c) {
+                    html += '<li>' + c.name_rus;
+                    if (c.name_eng) html += ' (' + c.name_eng + ')';
+                    html += ' — <code>' + c.url + '</code>';
+                    html += c.approved ? '' : ' <span class="badge bg-secondary">не одобрен</span>';
+                    html += '</li>';
+                });
+                html += '</ul>';
+                if (d.exact_match && d.suggested_slug) {
+                    html += '<div class="text-success small"><i class="bi bi-lightbulb me-1"></i>';
+                    html += 'Рекомендуемый slug: <strong>' + d.suggested_slug + '</strong>';
+                    html += ' <button type="button" class="btn btn-sm btn-link p-0 ms-1 use-suggested-btn" ';
+                    html += 'data-id="' + id + '" data-slug="' + d.suggested_slug + '">использовать</button>';
+                    html += '</div>';
+                }
+            } else {
+                html = '<div class="text-success small"><i class="bi bi-check-circle me-1"></i>URL свободен</div>';
+            }
+            conflictsEl.innerHTML = html;
+
+            // Bind "use suggested" button
+            var useSugBtn = conflictsEl.querySelector('.use-suggested-btn');
+            if (useSugBtn) {
+                useSugBtn.addEventListener('click', function() {
+                    checkSlug(this.dataset.id, this.dataset.slug);
+                });
+            }
+        })
+        .catch(function() { alert('Ошибка сети'); });
+    }
+
+    document.querySelectorAll('.person-check-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() { checkSlug(this.dataset.id); });
+    });
+
+    document.querySelectorAll('.person-recheck-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var id = this.dataset.id;
+            var slug = document.getElementById('slug-' + id).value.trim();
+            checkSlug(id, slug || undefined);
+        });
+    });
+
+    // Step 2: Push to persons table
     document.querySelectorAll('.person-push-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
             var id = this.dataset.id;
             var structSelect = document.getElementById('structure-' + id);
+            var slugInput = document.getElementById('slug-' + id);
             var kodStructure = structSelect ? structSelect.value : '';
+            var customSlug = slugInput ? slugInput.value.trim() : '';
 
             if (!kodStructure) {
-                alert('Выберите раздел на сайте перед созданием персоны.');
-                if (structSelect) structSelect.focus();
+                alert('Выберите раздел.');
+                return;
+            }
+            if (!customSlug) {
+                alert('Сначала нажмите "Проверить URL" чтобы сгенерировать slug.');
                 return;
             }
 
-            if (!confirm('Создать персону в рабочей таблице persons? Убедитесь, что дубликата нет.')) return;
+            var urlEl = document.getElementById('preview-url-' + id);
+            if (!confirm('Создать персону?\n\nURL: ' + (urlEl ? urlEl.textContent : ''))) return;
 
             var card = document.getElementById('suggestion-' + id);
             btn.disabled = true;
@@ -400,6 +520,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify({
                     suggestion_id: parseInt(id),
                     kod_structure: parseInt(kodStructure),
+                    custom_slug: customSlug,
                     csrf_token: csrfToken
                 })
             })
@@ -408,8 +529,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.success) {
                     card.querySelector('.card-header .badge').className = 'badge bg-primary';
                     card.querySelector('.card-header .badge').textContent = 'Создано';
-                    btn.parentElement.innerHTML =
+                    var panel = document.getElementById('push-panel-' + id);
+                    panel.innerHTML =
                         '<span class="badge bg-primary">Persons_id: ' + data.data.person_id + '</span>' +
+                        ' <a href="' + data.data.all_url + '" target="_blank" class="small ms-2">' + data.data.all_url + '</a>' +
                         '<span class="text-muted ms-2 small">Создано только что</span>';
                 } else {
                     alert(data.error?.message || data.error || 'Ошибка');
