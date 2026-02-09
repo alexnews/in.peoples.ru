@@ -56,6 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="auth-page">
     <div class="auth-card">
         <div class="brand"><span>in.</span>peoples.ru</div>
+        <p class="text-center text-muted small mb-2">Платформа для авторов проекта <a href="https://www.peoples.ru" target="_blank">peoples.ru</a> &mdash; энциклопедии известных людей. Добавляйте биографии, новости, фотографии и другие материалы о знаменитостях.</p>
         <h5 class="text-center mb-3">Вход в личный кабинет</h5>
 
         <?php if ($error): ?>

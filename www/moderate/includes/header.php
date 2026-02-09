@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+ob_start();
+
 /**
  * Shared header for moderation panel pages.
  *
@@ -36,6 +38,7 @@ $currentPage = basename($_SERVER['SCRIPT_NAME']);
     <meta name="csrf-token" content="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
     <meta name="robots" content="noindex, nofollow">
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?> &mdash; Модерация peoples.ru</title>
+    <link rel="icon" href="https://www.peoples.ru/favicon.ico" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1WR6zNn36Dg10oIy/mEV7nXhKBLlHN" crossorigin="anonymous">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
