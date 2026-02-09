@@ -192,11 +192,12 @@ function moveToProduction(string $tempPath, int $kodPersons): string
         throw new RuntimeException("Person not found or has no URL path: {$kodPersons}");
     }
 
-    $personPath = fromDb($person['AllUrlInSity']);
-    // Clean the path: remove leading/trailing slashes, ensure no double slashes
+    $personUrl = fromDb($person['AllUrlInSity']);
+    // Strip domain: https://www.peoples.ru/art/music/name/ -> art/music/name/
+    $personPath = preg_replace('#^https?://[^/]+/#', '', $personUrl);
     $personPath = trim($personPath, '/');
 
-    $productionBase = '/usr/local/www/peoples.ru/www/photo/' . $personPath;
+    $productionBase = '/usr/local/www/peoples.ru/www/' . $personPath;
 
     // Create production directory if needed
     if (!is_dir($productionBase)) {

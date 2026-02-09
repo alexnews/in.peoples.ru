@@ -97,11 +97,13 @@ try {
         $titleUtf8 = fromDb($title);
         $nameUrlArticle = generateUrlSlug($titleUtf8);
 
+        $photoPath = $submission['photo_path'] ?? null;
+
         // Route to correct production table based on section_id
         $publishedId = match ($sectionId) {
             2 => insertIntoHistories($db, $kodPersons, $content, $epigraph, $nameUrlArticle),
-            3 => insertIntoPhoto($db, $kodPersons, $submission['photo_path']),
-            4 => insertIntoNews($db, $kodPersons, $title, $content, $submitterUserId),
+            3 => insertIntoPhoto($db, $kodPersons, $photoPath),
+            4 => insertIntoNews($db, $kodPersons, $title, $content, $epigraph, $nameUrlArticle, $photoPath, $submitterUserId),
             5 => insertIntoForum($db, $kodPersons, $title, $content, $submitterUserId),
             7 => insertIntoSongs($db, $kodPersons, $title, $content),
             8 => insertIntoFacts($db, $kodPersons, $title, $content),
@@ -325,20 +327,76 @@ function insertIntoPhoto(PDO $db, ?int $kodPersons, ?string $photoPath): int
 
 /**
  * Section 4: news
+ *
+ * Mirrors the publish logic from dart-studio admin:
+ * - Moves photo to person folder, stores NamePhoto
+ * - Fills title_article, description, path (slug)
+ * - Inserts a photo table record linked to KodNews
  */
-function insertIntoNews(PDO $db, ?int $kodPersons, ?string $title, ?string $content, int $userId): int
-{
+function insertIntoNews(
+    PDO $db,
+    ?int $kodPersons,
+    ?string $title,
+    ?string $content,
+    ?string $epigraph,
+    string $nameUrlArticle,
+    ?string $photoPath,
+    int $userId
+): int {
+    // Move photo to person's production folder if present
+    $namePhoto = null;
+    if ($photoPath && $kodPersons) {
+        try {
+            $prodPath = moveToProduction($photoPath, $kodPersons);
+            $namePhoto = basename($prodPath);
+        } catch (\RuntimeException $e) {
+            // Log but don't fail the whole approval
+            error_log('insertIntoNews: photo move failed: ' . $e->getMessage());
+        }
+    }
+
     $stmt = $db->prepare(
-        "INSERT INTO news (KodPersons, title, article, approve, user_id, `date`, date_registration)
-         VALUES (:kod, :title, :article, 'YES', :uid, NOW(), NOW())"
+        "INSERT INTO news (
+            KodPersons, title, title_article, description, article,
+            path, NamePhoto, approve, user_id, `date`, date_registration
+        ) VALUES (
+            :kod, :title, :title_article, :descr, :article,
+            :path, :photo, 'YES', :uid, NOW(), NOW()
+        )"
     );
     $stmt->execute([
-        ':kod'     => $kodPersons,
-        ':title'   => $title,
-        ':article' => $content,
-        ':uid'     => $userId,
+        ':kod'           => $kodPersons,
+        ':title'         => $title,
+        ':title_article' => $title,
+        ':descr'         => $epigraph,
+        ':article'       => $content,
+        ':path'          => $nameUrlArticle,
+        ':photo'         => $namePhoto,
+        ':uid'           => $userId,
     ]);
-    return (int) $db->lastInsertId();
+    $newsId = (int) $db->lastInsertId();
+
+    // Insert into photo table if image was moved successfully
+    if ($namePhoto && $kodPersons) {
+        $photoStmt = $db->prepare(
+            "INSERT INTO photo (
+                KodPersons, KodNews, NamePhoto, DescrPhoto,
+                date_in, id_user, verstka, exist, id_section
+            ) VALUES (
+                :kod, :news_id, :photo, :descr,
+                NOW(), :uid, 'Y', 1, 1
+            )"
+        );
+        $photoStmt->execute([
+            ':kod'     => $kodPersons,
+            ':news_id' => $newsId,
+            ':photo'   => $namePhoto,
+            ':descr'   => $title,
+            ':uid'     => $userId,
+        ]);
+    }
+
+    return $newsId;
 }
 
 /**
