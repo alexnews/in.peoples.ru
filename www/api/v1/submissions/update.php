@@ -123,8 +123,8 @@ $newStatus = getInput('status');
 if ($newStatus !== null) {
     $currentStatus = $submission['status'];
     $allowedTransitions = [
-        'draft'              => ['pending'],
-        'revision_requested' => ['pending'],
+        'draft'              => ['draft', 'pending'],
+        'revision_requested' => ['revision_requested', 'pending'],
     ];
 
     if (!in_array($newStatus, $allowedTransitions[$currentStatus] ?? [], true)) {

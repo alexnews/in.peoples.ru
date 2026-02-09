@@ -125,9 +125,15 @@ foreach ($sections as $s) {
                         $personPhoto = !empty($submission['person_photo']) && !empty($submission['person_path'])
                             ? $submission['person_path'] . $submission['person_photo']
                             : '';
-                        $personDates = $submission['person_date_birth'] ?? '';
+                        $ruMonths = ['', 'января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+                        $formatRuDate = function(string $d) use ($ruMonths): string {
+                            $parts = explode('-', $d);
+                            if (count($parts) !== 3) return $d;
+                            return (int)$parts[2] . ' ' . ($ruMonths[(int)$parts[1]] ?? '') . ' ' . $parts[0];
+                        };
+                        $personDates = !empty($submission['person_date_birth']) ? $formatRuDate($submission['person_date_birth']) : '';
                         if (!empty($submission['person_date_death'])) {
-                            $personDates .= ' — ' . $submission['person_date_death'];
+                            $personDates .= ' — ' . $formatRuDate($submission['person_date_death']);
                         }
                     ?>
                     <div class="selected-person-card">
