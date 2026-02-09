@@ -21,6 +21,19 @@ $currentUser = requireRole('moderator');
 $isAdmin = ($currentUser['role'] === 'admin');
 $db = getDb();
 
+// ── Load structure categories for admin push ─────────────────────────────────
+
+$structureOptions = [];
+if ($isAdmin) {
+    $structStmt = $db->query(
+        "SELECT Structure_id, NameURL, URL, title
+         FROM structure
+         WHERE Structure_id > 0
+         ORDER BY NameURL"
+    );
+    $structureOptions = fromDbRows($structStmt->fetchAll());
+}
+
 // ── Filters ─────────────────────────────────────────────────────────────────
 
 $statusFilter = $_GET['status'] ?? 'pending';
@@ -250,7 +263,18 @@ require_once __DIR__ . '/includes/header.php';
             <div class="mt-3">
                 <div class="alert alert-info py-2 px-3 mb-2 small">
                     <i class="bi bi-info-circle me-1"></i>
-                    Модератор одобрил содержание. Проверьте, нет ли дубликата в базе, и нажмите «Создать персону».
+                    Модератор одобрил содержание. Выберите раздел, проверьте дубликаты и нажмите «Создать персону».
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small fw-bold mb-1">Раздел на сайте <span class="text-danger">*</span></label>
+                    <select class="form-select form-select-sm structure-select" id="structure-<?= (int)$sug['id'] ?>">
+                        <option value="">— Выберите раздел —</option>
+                        <?php foreach ($structureOptions as $opt): ?>
+                        <option value="<?= (int)$opt['Structure_id'] ?>">
+                            <?= htmlspecialchars(trim($opt['NameURL'], ' >'), ENT_QUOTES, 'UTF-8') ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="d-flex gap-2 align-items-center">
                     <button type="button" class="btn btn-sm btn-primary person-push-btn"
@@ -354,9 +378,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Admin push to persons table
     document.querySelectorAll('.person-push-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
+            var id = this.dataset.id;
+            var structSelect = document.getElementById('structure-' + id);
+            var kodStructure = structSelect ? structSelect.value : '';
+
+            if (!kodStructure) {
+                alert('Выберите раздел на сайте перед созданием персоны.');
+                if (structSelect) structSelect.focus();
+                return;
+            }
+
             if (!confirm('Создать персону в рабочей таблице persons? Убедитесь, что дубликата нет.')) return;
 
-            var id = this.dataset.id;
             var card = document.getElementById('suggestion-' + id);
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Создаётся...';
@@ -366,6 +399,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     suggestion_id: parseInt(id),
+                    kod_structure: parseInt(kodStructure),
                     csrf_token: csrfToken
                 })
             })
