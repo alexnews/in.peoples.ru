@@ -107,6 +107,25 @@ $statusLabels = [
     'draft'              => ['Черновик', 'bg-secondary'],
 ];
 
+// ── Russian date formatting ──────────────────────────────────────────────
+$ruMonths = ['', 'января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+
+function formatRuDate(string $dateStr, array $ruMonths): string {
+    if (empty($dateStr)) return '';
+    // Handle "YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS"
+    $parts = explode('-', substr($dateStr, 0, 10));
+    if (count($parts) !== 3) return $dateStr;
+    $day = (int)$parts[2];
+    $month = (int)$parts[1];
+    $year = $parts[0];
+    $result = $day . ' ' . ($ruMonths[$month] ?? '') . ' ' . $year;
+    // Append time if present
+    if (strlen($dateStr) > 10) {
+        $result .= ', ' . substr($dateStr, 11, 5);
+    }
+    return $result;
+}
+
 $pageTitle = 'Проверка: ' . ($submission['title'] ?? 'ID ' . $submissionId);
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -154,18 +173,16 @@ require_once __DIR__ . '/includes/header.php';
                 </blockquote>
                 <?php endif; ?>
 
-                <?php if ($sectionId === 3 && !empty($submission['photo_path'])): ?>
-                    <!-- Photo Preview -->
+                <?php if (!empty($submission['photo_path'])): ?>
+                    <!-- Attached photo -->
                     <div class="text-center mb-3">
                         <img src="<?= htmlspecialchars($submission['photo_path'], ENT_QUOTES, 'UTF-8') ?>"
                              alt="Загруженное фото"
                              class="review-photo-preview">
                     </div>
-                    <?php if (!empty($submission['title'])): ?>
-                    <p class="text-center text-muted"><em><?= htmlspecialchars($submission['title'], ENT_QUOTES, 'UTF-8') ?></em></p>
-                    <?php endif; ?>
+                <?php endif; ?>
 
-                <?php elseif ($sectionId === 2 && $existingBio): ?>
+                <?php if ($sectionId === 2 && $existingBio): ?>
                     <!-- Side-by-side biography diff -->
                     <div class="diff-container">
                         <div class="diff-panel diff-current">
@@ -181,8 +198,7 @@ require_once __DIR__ . '/includes/header.php';
                             </div>
                         </div>
                     </div>
-
-                <?php else: ?>
+                <?php elseif ($sectionId !== 3 || !empty($submission['content'])): ?>
                     <!-- Regular content display -->
                     <div class="review-content">
                         <?= $submission['content'] ?? '<em class="text-muted">Содержимое отсутствует</em>' ?>
@@ -275,9 +291,9 @@ require_once __DIR__ . '/includes/header.php';
                         <?php endif; ?>
                         <?php if (!empty($submission['person_birth']) || !empty($submission['person_death'])): ?>
                         <small class="text-muted d-block mt-1">
-                            <?= htmlspecialchars($submission['person_birth'] ?? '?', ENT_QUOTES, 'UTF-8') ?>
+                            <?= htmlspecialchars(formatRuDate($submission['person_birth'] ?? '', $ruMonths), ENT_QUOTES, 'UTF-8') ?>
                             <?php if (!empty($submission['person_death'])): ?>
-                                &mdash; <?= htmlspecialchars($submission['person_death'], ENT_QUOTES, 'UTF-8') ?>
+                                &mdash; <?= htmlspecialchars(formatRuDate($submission['person_death'], $ruMonths), ENT_QUOTES, 'UTF-8') ?>
                             <?php endif; ?>
                         </small>
                         <?php endif; ?>
@@ -319,18 +335,18 @@ require_once __DIR__ . '/includes/header.php';
                     </tr>
                     <tr>
                         <td class="text-muted">Дата подачи</td>
-                        <td><?= htmlspecialchars($submission['created_at'] ?? '-', ENT_QUOTES, 'UTF-8') ?></td>
+                        <td><?= htmlspecialchars(formatRuDate($submission['created_at'] ?? '', $ruMonths), ENT_QUOTES, 'UTF-8') ?></td>
                     </tr>
                     <?php if (!empty($submission['updated_at']) && $submission['updated_at'] !== $submission['created_at']): ?>
                     <tr>
                         <td class="text-muted">Обновлено</td>
-                        <td><?= htmlspecialchars($submission['updated_at'], ENT_QUOTES, 'UTF-8') ?></td>
+                        <td><?= htmlspecialchars(formatRuDate($submission['updated_at'], $ruMonths), ENT_QUOTES, 'UTF-8') ?></td>
                     </tr>
                     <?php endif; ?>
                     <?php if (!empty($submission['reviewed_at'])): ?>
                     <tr>
                         <td class="text-muted">Проверено</td>
-                        <td><?= htmlspecialchars($submission['reviewed_at'], ENT_QUOTES, 'UTF-8') ?></td>
+                        <td><?= htmlspecialchars(formatRuDate($submission['reviewed_at'], $ruMonths), ENT_QUOTES, 'UTF-8') ?></td>
                     </tr>
                     <?php endif; ?>
                     <tr>
