@@ -483,6 +483,30 @@ a:hover {
     margin: 1rem 0;
 }
 
+/* ---- Inline article figures ---- */
+.submission-content figure,
+.review-content figure,
+#content-preview figure {
+    margin: 1.5rem 0;
+    text-align: center;
+}
+.submission-content figure img,
+.review-content figure img,
+#content-preview figure img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+}
+.submission-content figcaption,
+.review-content figcaption,
+#content-preview figcaption {
+    font-size: .85rem;
+    color: var(--text-muted);
+    margin-top: .5rem;
+    font-style: italic;
+}
+
 /* ---- Footer ---- */
 .site-footer {
     background: #f8f9fa;

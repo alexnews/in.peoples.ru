@@ -571,18 +571,102 @@
         var $contentGroup = $('#content-group');
         var $photoGroup = $('#photo-upload-group');
         var $epigraphGroup = $('#epigraph-group');
+        var $inlinePhotoBtn = $('#btn-inline-photo');
 
         if (sectionId === 3) {
             // Photo section: hide content editor, show photo upload prominently
             $contentGroup.hide();
             $photoGroup.show().addClass('photo-prominent');
-        } else {
+            $inlinePhotoBtn.hide();
+        } else if (sectionId === 2) {
+            // Biography: show content with inline photo button, hide bottom dropzone
             $contentGroup.show();
-            $photoGroup.show().removeClass('photo-prominent');
+            $photoGroup.hide();
+            $inlinePhotoBtn.show();
+        } else {
+            // All other sections: content only, no photos
+            $contentGroup.show();
+            $photoGroup.hide();
+            $inlinePhotoBtn.hide();
         }
 
         // Show epigraph for all sections
         $epigraphGroup.show();
+    }
+
+    /* ================================================================
+       INLINE PHOTO INSERT (biography section only)
+       ================================================================ */
+    function initInlinePhoto() {
+        var $btn = $('#btn-inline-photo');
+        var $fileInput = $('#inline-photo-input');
+        if (!$btn.length || !$fileInput.length) return;
+
+        $btn.on('click', function () {
+            $fileInput.trigger('click');
+        });
+
+        $fileInput.on('change', function () {
+            var file = this.files[0];
+            if (!file || !file.type.match(/^image\//)) return;
+            $fileInput.val('');
+            uploadInlinePhoto(file);
+        });
+    }
+
+    function uploadInlinePhoto(file) {
+        var $btn = $('#btn-inline-photo');
+        var origHtml = $btn.html();
+        $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span>');
+
+        var fd = new FormData();
+        fd.append('photo', file);
+        fd.append('csrf_token', getCsrfToken());
+
+        $.ajax({
+            url: '/api/v1/photos/inline-upload.php',
+            type: 'POST',
+            data: fd,
+            contentType: false,
+            processData: false,
+            dataType: 'json',
+            success: function (resp) {
+                $btn.prop('disabled', false).html(origHtml);
+                if (!resp.success || !resp.data || !resp.data.file_path) {
+                    showFlash('\u041e\u0448\u0438\u0431\u043a\u0430 \u0437\u0430\u0433\u0440\u0443\u0437\u043a\u0438 \u0444\u043e\u0442\u043e', 'danger');
+                    return;
+                }
+                var caption = prompt('\u041f\u043e\u0434\u043f\u0438\u0441\u044c \u043a \u0444\u043e\u0442\u043e (\u043c\u043e\u0436\u043d\u043e \u043e\u0441\u0442\u0430\u0432\u0438\u0442\u044c \u043f\u0443\u0441\u0442\u044b\u043c):') || '';
+                insertFigureAtCursor(resp.data.file_path, caption);
+            },
+            error: function () {
+                $btn.prop('disabled', false).html(origHtml);
+                showFlash('\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c \u0444\u043e\u0442\u043e', 'danger');
+            }
+        });
+    }
+
+    function insertFigureAtCursor(src, caption) {
+        var $textarea = $('#content');
+        if (!$textarea.length) return;
+
+        var ta = $textarea[0];
+        var pos = ta.selectionStart || ta.value.length;
+
+        var figureHtml = '\n<figure>\n  <img src="' + src + '" alt="' + escAttr(caption) + '">\n';
+        if (caption) {
+            figureHtml += '  <figcaption>' + escHtml(caption) + '</figcaption>\n';
+        }
+        figureHtml += '</figure>\n';
+
+        ta.value = ta.value.substring(0, pos) + figureHtml + ta.value.substring(pos);
+        ta.focus();
+        var newPos = pos + figureHtml.length;
+        ta.selectionStart = newPos;
+        ta.selectionEnd = newPos;
+
+        // Mark form as dirty for autosave
+        formDirty = true;
     }
 
     /* ================================================================
@@ -853,6 +937,7 @@
     $(document).ready(function () {
         initPersonAutocomplete();
         initPhotoUpload();
+        initInlinePhoto();
         initAutosave();
         initSubmitForm();
         initSectionToggle();

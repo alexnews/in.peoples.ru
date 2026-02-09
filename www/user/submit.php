@@ -178,7 +178,11 @@ foreach ($sections as $s) {
                     <button type="button" class="btn btn-sm btn-outline-secondary" data-tag="h3" title="H3">H3</button>
                     <button type="button" class="btn btn-sm btn-outline-secondary" data-tag="p" title="Paragraph">P</button>
                     <button type="button" class="btn btn-sm btn-outline-secondary" data-tag="blockquote" title="Quote"><i class="bi bi-quote"></i></button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="btn-inline-photo" title="Вставить фото в текст" style="display:none">
+                        <i class="bi bi-image"></i> Фото
+                    </button>
                 </div>
+                <input type="file" id="inline-photo-input" accept="image/jpeg,image/png,image/webp" style="display:none">
                 <textarea class="form-control" id="content" name="content" rows="12"><?= $submission ? htmlspecialchars($submission['content'] ?? '', ENT_QUOTES, 'UTF-8') : '' ?></textarea>
                 <div class="invalid-feedback">Заполните содержание</div>
             </div>
