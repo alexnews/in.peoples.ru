@@ -35,7 +35,8 @@ $stmt = $db->prepare(
             u.reputation AS submitter_reputation, u.avatar_path AS submitter_avatar,
             p.FullNameRus AS person_name, p.FullNameEngl AS person_name_eng,
             p.NamePhoto AS person_photo, p.Persons_id AS person_id,
-            p.DataBirth AS person_birth, p.DataDeath AS person_death,
+            p.AllUrlInSity AS person_path,
+            p.DateIn AS person_birth, p.DateOut AS person_death,
             ps.nameRus AS section_name, ps.nameEng AS section_name_eng
      FROM user_submissions s
      INNER JOIN users u ON u.id = s.user_id
@@ -261,8 +262,8 @@ require_once __DIR__ . '/includes/header.php';
             </div>
             <div class="card-body">
                 <div class="d-flex align-items-start gap-3">
-                    <?php if (!empty($submission['person_photo'])): ?>
-                    <img src="https://www.peoples.ru/photo/<?= htmlspecialchars($submission['person_photo'], ENT_QUOTES, 'UTF-8') ?>"
+                    <?php if (!empty($submission['person_photo']) && !empty($submission['person_path'])): ?>
+                    <img src="<?= htmlspecialchars($submission['person_path'] . $submission['person_photo'], ENT_QUOTES, 'UTF-8') ?>"
                          alt="<?= htmlspecialchars($submission['person_name'], ENT_QUOTES, 'UTF-8') ?>"
                          class="person-thumbnail"
                          onerror="this.style.display='none';">
@@ -280,8 +281,8 @@ require_once __DIR__ . '/includes/header.php';
                             <?php endif; ?>
                         </small>
                         <?php endif; ?>
-                        <?php if (!empty($submission['person_id'])): ?>
-                        <a href="https://www.peoples.ru/art/cinema/actor/<?= (int) $submission['person_id'] ?>/"
+                        <?php if (!empty($submission['person_path'])): ?>
+                        <a href="<?= htmlspecialchars($submission['person_path'], ENT_QUOTES, 'UTF-8') ?>"
                            target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary mt-2">
                             <i class="bi bi-box-arrow-up-right me-1"></i>Профиль на peoples.ru
                         </a>
