@@ -123,7 +123,7 @@ foreach ($sections as $s) {
                     <?php if ($submission && $submission['KodPersons']): ?>
                     <?php
                         $personPhoto = !empty($submission['person_photo']) && !empty($submission['person_path'])
-                            ? 'https://peoples.ru/photo/' . $submission['person_path'] . '/' . $submission['person_photo']
+                            ? $submission['person_path'] . $submission['person_photo']
                             : '';
                         $personDates = $submission['person_date_birth'] ?? '';
                         if (!empty($submission['person_date_death'])) {
@@ -162,9 +162,17 @@ foreach ($sections as $s) {
                           placeholder="Краткое описание или эпиграф (необязательно)"><?= $submission ? htmlspecialchars($submission['epigraph'] ?? '', ENT_QUOTES, 'UTF-8') : '' ?></textarea>
             </div>
 
-            <!-- Content (TinyMCE) -->
+            <!-- Content editor -->
             <div class="mb-3" id="content-group">
                 <label for="content" class="form-label">Содержание <span class="text-danger">*</span></label>
+                <div id="content-toolbar" class="btn-toolbar mb-1 gap-1">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-tag="b" title="Bold"><b>B</b></button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-tag="i" title="Italic"><i>I</i></button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-tag="h2" title="H2">H2</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-tag="h3" title="H3">H3</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-tag="p" title="Paragraph">P</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-tag="blockquote" title="Quote"><i class="bi bi-quote"></i></button>
+                </div>
                 <textarea class="form-control" id="content" name="content" rows="12"><?= $submission ? htmlspecialchars($submission['content'] ?? '', ENT_QUOTES, 'UTF-8') : '' ?></textarea>
                 <div class="invalid-feedback">Заполните содержание</div>
             </div>
@@ -234,53 +242,28 @@ foreach ($sections as $s) {
     </div>
 </form>
 
-<!-- TinyMCE -->
-<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+<!-- Simple formatting toolbar -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // Only init TinyMCE if content group is visible
-    if (document.getElementById('content') && document.getElementById('content-group').style.display !== 'none') {
-        initTinyMCE();
-    }
+    var toolbar = document.getElementById('content-toolbar');
+    var textarea = document.getElementById('content');
+    if (!toolbar || !textarea) return;
 
-    // Re-init TinyMCE when section changes and content group becomes visible
-    var sectionSelect = document.getElementById('section_id');
-    if (sectionSelect) {
-        sectionSelect.addEventListener('change', function () {
-            var sectionId = parseInt(this.value, 10);
-            if (sectionId !== 3) {
-                // Ensure TinyMCE is initialized
-                if (!tinymce.get('content')) {
-                    initTinyMCE();
-                }
-            } else {
-                // Photo section - destroy TinyMCE if it exists
-                if (tinymce.get('content')) {
-                    tinymce.get('content').remove();
-                }
-            }
+    toolbar.querySelectorAll('[data-tag]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var tag = this.getAttribute('data-tag');
+            var start = textarea.selectionStart;
+            var end = textarea.selectionEnd;
+            var selected = textarea.value.substring(start, end);
+            var open = '<' + tag + '>';
+            var close = '</' + tag + '>';
+            textarea.value = textarea.value.substring(0, start) + open + selected + close + textarea.value.substring(end);
+            textarea.focus();
+            textarea.selectionStart = start + open.length;
+            textarea.selectionEnd = start + open.length + selected.length;
         });
-    }
-});
-
-function initTinyMCE() {
-    tinymce.init({
-        selector: '#content',
-        height: 400,
-        language: 'ru',
-        menubar: false,
-        branding: false,
-        statusbar: true,
-        plugins: 'link lists',
-        toolbar: 'bold italic underline | link | h2 h3 | bullist numlist | blockquote | removeformat',
-        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 15px; line-height: 1.6; }',
-        setup: function (editor) {
-            editor.on('change keyup', function () {
-                editor.save(); // sync with textarea
-            });
-        }
     });
-}
+});
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

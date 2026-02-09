@@ -98,11 +98,11 @@
     function renderAutocomplete(items, $dropdown) {
         $dropdown.empty();
         $.each(items, function (i, p) {
-            var photoUrl = p.photo ? 'https://peoples.ru/photo/' + p.path + '/' + p.photo : '';
+            var photoUrl = (p.photo && p.path) ? p.path + p.photo : '';
             var dates = '';
             if (p.dates && p.dates.birth) {
                 dates = p.dates.birth;
-                if (p.dates.death) dates += ' — ' + p.dates.death;
+                if (p.dates.death) dates += ' \u2014 ' + p.dates.death;
             }
             var $item = $('<div class="person-autocomplete-item" />')
                 .attr('data-id', p.id)
