@@ -138,12 +138,14 @@ CREATE TABLE user_person_suggestions (
     cc2                 CHAR(2) DEFAULT NULL,
 
     -- Article fields
-    title               VARCHAR(500) DEFAULT NULL,  -- Article title (Заголовок)
-    epigraph            VARCHAR(1000) DEFAULT NULL,  -- Short description / who is this person
+    title               VARCHAR(500) DEFAULT NULL,  -- Person's rank/occupation (Звание) → persons.Epigraph
+    epigraph            VARCHAR(1000) DEFAULT NULL,  -- Short article description → histories.Epigraph
 
     -- Content
     biography           MEDIUMTEXT DEFAULT NULL,    -- Biography text written by user
     source_url          VARCHAR(500) DEFAULT NULL,
+    person_photo_path   VARCHAR(500) DEFAULT NULL,  -- Portrait photo (temp storage)
+    photo_path          VARCHAR(500) DEFAULT NULL,  -- Article photo (temp storage)
 
     -- Moderation (moderator checks content quality)
     status              ENUM('pending', 'approved', 'rejected', 'revision_requested', 'published') DEFAULT 'pending',

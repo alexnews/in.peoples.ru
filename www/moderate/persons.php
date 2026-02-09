@@ -194,8 +194,14 @@ require_once __DIR__ . '/includes/header.php';
                     </table>
                 </div>
                 <div class="col-md-8">
+                    <?php if (!empty($sug['person_photo_path'])): ?>
+                    <div class="float-end ms-3 mb-2">
+                        <img src="<?= htmlspecialchars($sug['person_photo_path'], ENT_QUOTES, 'UTF-8') ?>"
+                             alt="Фото" style="max-width:120px;max-height:150px;border-radius:4px;object-fit:cover;">
+                    </div>
+                    <?php endif; ?>
                     <?php if (!empty($sug['title'])): ?>
-                    <div class="fw-bold mb-1"><?= htmlspecialchars($sug['title'], ENT_QUOTES, 'UTF-8') ?></div>
+                    <div class="mb-1"><span class="badge bg-secondary">Звание:</span> <?= htmlspecialchars($sug['title'], ENT_QUOTES, 'UTF-8') ?></div>
                     <?php endif; ?>
                     <?php if (!empty($sug['epigraph'])): ?>
                     <div class="text-muted fst-italic small mb-2"><?= htmlspecialchars($sug['epigraph'], ENT_QUOTES, 'UTF-8') ?></div>
@@ -203,6 +209,13 @@ require_once __DIR__ . '/includes/header.php';
                     <div class="review-content small" style="max-height:200px;overflow-y:auto;">
                         <?= nl2br(htmlspecialchars($sug['biography'] ?? '', ENT_QUOTES, 'UTF-8')) ?>
                     </div>
+                    <?php if (!empty($sug['photo_path'])): ?>
+                    <div class="mt-2">
+                        <span class="small text-muted">Фото к статье:</span>
+                        <img src="<?= htmlspecialchars($sug['photo_path'], ENT_QUOTES, 'UTF-8') ?>"
+                             alt="Фото к статье" style="max-width:200px;max-height:150px;border-radius:4px;object-fit:cover;display:block;margin-top:4px;">
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
 

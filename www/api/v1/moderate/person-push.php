@@ -69,11 +69,20 @@ try {
         : '';
 
     $biography = $suggestion['biography'] ?? '';
-    $title     = $suggestion['title'] ?? '';
-    // Use user-provided epigraph, fall back to first 200 chars of biography
-    $epigraph  = !empty($suggestion['epigraph'])
+    // title = Звание (person's rank/occupation) → persons.Epigraph
+    $zvanie    = $suggestion['title'] ?? '';
+    // epigraph = article description → histories.Epigraph
+    $articleEpigraph = !empty($suggestion['epigraph'])
         ? $suggestion['epigraph']
         : mb_substr($biography, 0, 200, 'UTF-8');
+    // Person epigraph = zvanie, fall back to article epigraph
+    $personEpigraph = !empty($zvanie) ? $zvanie : $articleEpigraph;
+
+    // Person photo filename (just the basename, stored in temp)
+    $personPhoto = '';
+    if (!empty($suggestion['person_photo_path'])) {
+        $personPhoto = basename($suggestion['person_photo_path']);
+    }
 
     // INSERT into persons table with approve='NO'
     // Admin will set AllUrlInSity, path, KodStructure separately
@@ -81,13 +90,13 @@ try {
         "INSERT INTO persons (
             NameRus, SurNameRus, FullNameRus,
             NameEngl, SurNameEngl, FullNameEngl,
-            Epigraph, DateIn, DateOut, gender,
+            Epigraph, NamePhoto, DateIn, DateOut, gender,
             TownIn, cc2born, cc2dead, cc2,
             approve
         ) VALUES (
             :nameRus, :surNameRus, :fullNameRus,
             :nameEngl, :surNameEngl, :fullNameEngl,
-            :epigraph, :dateIn, :dateOut, :gender,
+            :epigraph, :namePhoto, :dateIn, :dateOut, :gender,
             :townIn, :cc2born, :cc2dead, :cc2,
             'NO'
         )"
@@ -99,7 +108,8 @@ try {
         ':nameEngl'     => toDb($nameEngl),
         ':surNameEngl'  => toDb($surNameEngl),
         ':fullNameEngl' => toDb($fullNameEngl),
-        ':epigraph'     => toDb($epigraph),
+        ':epigraph'     => toDb($personEpigraph),
+        ':namePhoto'    => !empty($personPhoto) ? toDb($personPhoto) : null,
         ':dateIn'       => !empty($suggestion['DateIn']) ? $suggestion['DateIn'] : null,
         ':dateOut'      => !empty($suggestion['DateOut']) ? $suggestion['DateOut'] : null,
         ':gender'       => !empty($suggestion['gender']) ? $suggestion['gender'] : null,
@@ -113,14 +123,13 @@ try {
 
     // INSERT biography into histories
     $bioStmt = $db->prepare(
-        'INSERT INTO histories (KodPersons, Content, Epigraph, NameURLArticle, date_pub)
-         VALUES (:kod, :content, :epigraph, :title, NOW())'
+        'INSERT INTO histories (KodPersons, Content, Epigraph, date_pub)
+         VALUES (:kod, :content, :epigraph, NOW())'
     );
     $bioStmt->execute([
         ':kod'      => $newPersonId,
         ':content'  => toDb($biography),
-        ':epigraph' => toDb($epigraph),
-        ':title'    => !empty($title) ? toDb($title) : null,
+        ':epigraph' => toDb($articleEpigraph),
     ]);
 
     $historiesId = (int) $db->lastInsertId();

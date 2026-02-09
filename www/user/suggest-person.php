@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 $pageTitle = 'Предложить персону';
 require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/../includes/upload.php';
 
 $db = getDb();
 $userId = (int) $currentUser['id'];
@@ -54,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors['NameRus'] = 'Укажите имя на русском (минимум 2 символа)';
         }
         if (mb_strlen($values['title'], 'UTF-8') < 3) {
-            $errors['title'] = 'Укажите заголовок (минимум 3 символа)';
+            $errors['title'] = 'Укажите звание/род деятельности (минимум 3 символа)';
         }
         if (mb_strlen($values['description'], 'UTF-8') < 50) {
             $errors['description'] = 'Опишите биографию подробнее (минимум 50 символов)';
@@ -78,6 +79,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors['cc2'] = 'Код страны — 2 латинские буквы';
         }
 
+        // Handle photo uploads
+        $personPhotoPath = null;
+        $articlePhotoPath = null;
+
+        if (empty($errors) && !empty($_FILES['person_photo']['name'])) {
+            try {
+                $info = processUpload($_FILES['person_photo'], $userId);
+                $personPhotoPath = $info['file_path'];
+            } catch (\InvalidArgumentException $e) {
+                $errors['person_photo'] = $e->getMessage();
+            } catch (\RuntimeException $e) {
+                $errors['person_photo'] = 'Ошибка загрузки фото: ' . $e->getMessage();
+            }
+        }
+
+        if (empty($errors) && !empty($_FILES['article_photo']['name'])) {
+            try {
+                $info = processUpload($_FILES['article_photo'], $userId);
+                $articlePhotoPath = $info['file_path'];
+            } catch (\InvalidArgumentException $e) {
+                $errors['article_photo'] = $e->getMessage();
+            } catch (\RuntimeException $e) {
+                $errors['article_photo'] = 'Ошибка загрузки фото: ' . $e->getMessage();
+            }
+        }
+
         if (empty($errors)) {
             $stmt = $db->prepare(
                 'INSERT INTO user_person_suggestions
@@ -85,31 +112,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                      DateIn, DateOut, gender, TownIn,
                      cc2born, cc2dead, cc2,
                      title, epigraph, biography, source_url,
+                     person_photo_path, photo_path,
                      status, created_at, updated_at)
                  VALUES
                     (:uid, :nameRus, :surNameRus, :nameEngl, :surNameEngl,
                      :dateIn, :dateOut, :gender, :townIn,
                      :cc2born, :cc2dead, :cc2,
                      :title, :epigraph, :biography, :source_url,
+                     :personPhoto, :articlePhoto,
                      \'pending\', NOW(), NOW())'
             );
             $stmt->execute([
-                ':uid'         => $userId,
-                ':nameRus'     => toDb($values['NameRus']),
-                ':surNameRus'  => toDb($values['SurNameRus']),
-                ':nameEngl'    => $values['NameEngl'] !== '' ? toDb($values['NameEngl']) : null,
-                ':surNameEngl' => $values['SurNameEngl'] !== '' ? toDb($values['SurNameEngl']) : null,
-                ':dateIn'      => $values['DateIn'] !== '' ? $values['DateIn'] : null,
-                ':dateOut'     => $values['DateOut'] !== '' ? $values['DateOut'] : null,
-                ':gender'      => $values['gender'] !== '' ? $values['gender'] : null,
-                ':townIn'      => $values['TownIn'] !== '' ? toDb($values['TownIn']) : null,
-                ':cc2born'     => $values['cc2born'] !== '' ? strtoupper($values['cc2born']) : null,
-                ':cc2dead'     => $values['cc2dead'] !== '' ? strtoupper($values['cc2dead']) : null,
-                ':cc2'         => $values['cc2'] !== '' ? strtoupper($values['cc2']) : null,
-                ':title'       => toDb($values['title']),
-                ':epigraph'    => $values['epigraph'] !== '' ? toDb($values['epigraph']) : null,
-                ':biography'   => toDb($values['description']),
-                ':source_url'  => $values['source_url'] !== '' ? toDb($values['source_url']) : null,
+                ':uid'          => $userId,
+                ':nameRus'      => toDb($values['NameRus']),
+                ':surNameRus'   => toDb($values['SurNameRus']),
+                ':nameEngl'     => $values['NameEngl'] !== '' ? toDb($values['NameEngl']) : null,
+                ':surNameEngl'  => $values['SurNameEngl'] !== '' ? toDb($values['SurNameEngl']) : null,
+                ':dateIn'       => $values['DateIn'] !== '' ? $values['DateIn'] : null,
+                ':dateOut'      => $values['DateOut'] !== '' ? $values['DateOut'] : null,
+                ':gender'       => $values['gender'] !== '' ? $values['gender'] : null,
+                ':townIn'       => $values['TownIn'] !== '' ? toDb($values['TownIn']) : null,
+                ':cc2born'      => $values['cc2born'] !== '' ? strtoupper($values['cc2born']) : null,
+                ':cc2dead'      => $values['cc2dead'] !== '' ? strtoupper($values['cc2dead']) : null,
+                ':cc2'          => $values['cc2'] !== '' ? strtoupper($values['cc2']) : null,
+                ':title'        => toDb($values['title']),
+                ':epigraph'     => $values['epigraph'] !== '' ? toDb($values['epigraph']) : null,
+                ':biography'    => toDb($values['description']),
+                ':source_url'   => $values['source_url'] !== '' ? toDb($values['source_url']) : null,
+                ':personPhoto'  => $personPhotoPath,
+                ':articlePhoto' => $articlePhotoPath,
             ]);
 
             $success = true;
@@ -141,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <p class="text-muted mb-4">Если вы не нашли нужного человека в базе, предложите его добавить. Модератор рассмотрит заявку и создаст страницу персоны.</p>
 
-        <form method="POST" action="/user/suggest-person.php" novalidate>
+        <form method="POST" action="/user/suggest-person.php" enctype="multipart/form-data" novalidate>
             <?= csrfField() ?>
 
             <!-- Names (Russian) -->
@@ -270,24 +301,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </div>
 
-            <!-- Title -->
+            <!-- Person photo -->
+            <div class="card suggest-person-section mb-3">
+                <div class="card-header"><i class="bi bi-camera me-1"></i>Фото персоны</div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <label for="person_photo" class="form-label">Портрет / главное фото</label>
+                        <input type="file" class="form-control <?= isset($errors['person_photo']) ? 'is-invalid' : '' ?>"
+                               id="person_photo" name="person_photo" accept="image/jpeg,image/png,image/webp">
+                        <?php if (isset($errors['person_photo'])): ?>
+                        <div class="invalid-feedback"><?= htmlspecialchars($errors['person_photo'], ENT_QUOTES, 'UTF-8') ?></div>
+                        <?php endif; ?>
+                        <div class="form-text">JPG, PNG или WebP. Максимум 10 МБ.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Zvanie (person's rank/occupation) -->
             <div class="mb-3">
-                <label for="title" class="form-label">Заголовок <span class="text-danger">*</span></label>
+                <label for="title" class="form-label">Звание / род деятельности <span class="text-danger">*</span></label>
                 <input type="text" class="form-control <?= isset($errors['title']) ? 'is-invalid' : '' ?>"
                        id="title" name="title"
                        value="<?= htmlspecialchars($values['title'], ENT_QUOTES, 'UTF-8') ?>"
-                       placeholder="Введите заголовок" required>
+                       placeholder="Советский кинорежиссёр, сценарист" required>
                 <?php if (isset($errors['title'])): ?>
                 <div class="invalid-feedback"><?= htmlspecialchars($errors['title'], ENT_QUOTES, 'UTF-8') ?></div>
                 <?php endif; ?>
+                <div class="form-text">Кто этот человек? Например: «Актёр, режиссёр», «Учёный-физик»</div>
             </div>
 
-            <!-- Epigraph -->
+            <!-- Epigraph (article description) -->
             <div class="mb-3">
-                <label for="epigraph" class="form-label">Эпиграф / краткое описание</label>
+                <label for="epigraph" class="form-label">Эпиграф / краткое описание статьи</label>
                 <textarea class="form-control" id="epigraph" name="epigraph" rows="2"
-                          placeholder="Краткое описание или эпиграф (необязательно)"><?= htmlspecialchars($values['epigraph'], ENT_QUOTES, 'UTF-8') ?></textarea>
-                <div class="form-text">Например: «Советский кинорежиссёр, сценарист»</div>
+                          placeholder="Краткое описание биографической статьи (необязательно)"><?= htmlspecialchars($values['epigraph'], ENT_QUOTES, 'UTF-8') ?></textarea>
+                <div class="form-text">Краткая аннотация к статье-биографии</div>
             </div>
 
             <!-- Biography -->
@@ -300,6 +348,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="invalid-feedback"><?= htmlspecialchars($errors['description'], ENT_QUOTES, 'UTF-8') ?></div>
                 <?php endif; ?>
                 <div class="form-text">Минимум 50 символов. Напишите биографию персоны.</div>
+            </div>
+
+            <!-- Article photo -->
+            <div class="mb-3">
+                <label for="article_photo" class="form-label">Фото для статьи</label>
+                <input type="file" class="form-control <?= isset($errors['article_photo']) ? 'is-invalid' : '' ?>"
+                       id="article_photo" name="article_photo" accept="image/jpeg,image/png,image/webp">
+                <?php if (isset($errors['article_photo'])): ?>
+                <div class="invalid-feedback"><?= htmlspecialchars($errors['article_photo'], ENT_QUOTES, 'UTF-8') ?></div>
+                <?php endif; ?>
+                <div class="form-text">Фото к статье-биографии. JPG, PNG или WebP. Максимум 10 МБ.</div>
             </div>
 
             <!-- Source URL -->
@@ -327,8 +386,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <li>Укажите фамилию и имя на русском — обязательно</li>
                     <li>Английское написание поможет при поиске</li>
                     <li>Коды стран — 2 латинские буквы (RU, US, GB, DE и т.п.)</li>
-                    <li>Заголовок — название статьи о персоне</li>
-                    <li>Эпиграф — кратко, кто это (например: «Актёр, режиссёр»)</li>
+                    <li>Загрузите портрет персоны (если есть)</li>
+                    <li>Звание — кто это: «Актёр, режиссёр», «Учёный-физик»</li>
+                    <li>Эпиграф — краткое описание статьи</li>
                     <li>Напишите биографию минимум 50 символов</li>
                     <li>По возможности укажите ссылку на Википедию</li>
                 </ul>

@@ -24,6 +24,8 @@ CREATE TABLE IF NOT EXISTS user_person_suggestions (
     -- Content
     biography           MEDIUMTEXT DEFAULT NULL COMMENT 'Biography text written by user',
     source_url          VARCHAR(500) DEFAULT NULL,
+    person_photo_path   VARCHAR(500) DEFAULT NULL COMMENT 'Portrait photo (temp storage)',
+    photo_path          VARCHAR(500) DEFAULT NULL COMMENT 'Article photo (temp storage)',
 
     -- Moderation (moderator checks content quality)
     status              ENUM('pending', 'approved', 'rejected', 'revision_requested', 'published') DEFAULT 'pending',
