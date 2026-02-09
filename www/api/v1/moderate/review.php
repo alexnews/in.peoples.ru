@@ -101,8 +101,8 @@ try {
         $publishedId = match ($sectionId) {
             2 => insertIntoHistories($db, $kodPersons, $content, $epigraph, $nameUrlArticle),
             3 => insertIntoPhoto($db, $kodPersons, $submission['photo_path']),
-            4 => insertIntoNews($db, $kodPersons, $title, $content),
-            5 => insertIntoForum($db, $kodPersons, $title, $content),
+            4 => insertIntoNews($db, $kodPersons, $title, $content, $submitterUserId),
+            5 => insertIntoForum($db, $kodPersons, $title, $content, $submitterUserId),
             7 => insertIntoSongs($db, $kodPersons, $title, $content),
             8 => insertIntoFacts($db, $kodPersons, $title, $content),
             19 => insertIntoPoetry($db, $kodPersons, $title, $content),
@@ -326,16 +326,17 @@ function insertIntoPhoto(PDO $db, ?int $kodPersons, ?string $photoPath): int
 /**
  * Section 4: news
  */
-function insertIntoNews(PDO $db, ?int $kodPersons, ?string $title, ?string $content): int
+function insertIntoNews(PDO $db, ?int $kodPersons, ?string $title, ?string $content, int $userId): int
 {
     $stmt = $db->prepare(
-        "INSERT INTO news (KodPersons, title, content, approve, date_registration)
-         VALUES (:kod, :title, :content, 'YES', NOW())"
+        "INSERT INTO news (KodPersons, title, article, approve, user_id, `date`, date_registration)
+         VALUES (:kod, :title, :article, 'YES', :uid, NOW(), NOW())"
     );
     $stmt->execute([
         ':kod'     => $kodPersons,
         ':title'   => $title,
-        ':content' => $content,
+        ':article' => $content,
+        ':uid'     => $userId,
     ]);
     return (int) $db->lastInsertId();
 }
@@ -343,16 +344,17 @@ function insertIntoNews(PDO $db, ?int $kodPersons, ?string $title, ?string $cont
 /**
  * Section 5: peoples_forum
  */
-function insertIntoForum(PDO $db, ?int $kodPersons, ?string $title, ?string $content): int
+function insertIntoForum(PDO $db, ?int $kodPersons, ?string $title, ?string $content, int $userId): int
 {
     $stmt = $db->prepare(
-        'INSERT INTO peoples_forum (KodPersons, Title, Message, date_registration)
-         VALUES (:kod, :title, :message, NOW())'
+        'INSERT INTO peoples_forum (KodPersons, Title, Message, id_user, date_registration)
+         VALUES (:kod, :title, :message, :uid, NOW())'
     );
     $stmt->execute([
         ':kod'     => $kodPersons,
         ':title'   => $title,
         ':message' => $content,
+        ':uid'     => $userId,
     ]);
     return (int) $db->lastInsertId();
 }
@@ -363,13 +365,13 @@ function insertIntoForum(PDO $db, ?int $kodPersons, ?string $title, ?string $con
 function insertIntoSongs(PDO $db, ?int $kodPersons, ?string $title, ?string $content): int
 {
     $stmt = $db->prepare(
-        'INSERT INTO songs (KodPersons, title, content, date_registration)
-         VALUES (:kod, :title, :content, NOW())'
+        "INSERT INTO songs (KodPersons, NameSong, song, approve, date_registration)
+         VALUES (:kod, :name, :song, 'YES', NOW())"
     );
     $stmt->execute([
-        ':kod'     => $kodPersons,
-        ':title'   => $title,
-        ':content' => $content,
+        ':kod'  => $kodPersons,
+        ':name' => $title,
+        ':song' => $content,
     ]);
     return (int) $db->lastInsertId();
 }
@@ -380,13 +382,13 @@ function insertIntoSongs(PDO $db, ?int $kodPersons, ?string $title, ?string $con
 function insertIntoFacts(PDO $db, ?int $kodPersons, ?string $title, ?string $content): int
 {
     $stmt = $db->prepare(
-        'INSERT INTO Facts (KodPersons, title, content, date_registration)
-         VALUES (:kod, :title, :content, NOW())'
+        "INSERT INTO Facts (KodPersons, Title, Facts_txt, approve, date_registration)
+         VALUES (:kod, :title, :txt, 'YES', NOW())"
     );
     $stmt->execute([
-        ':kod'     => $kodPersons,
-        ':title'   => $title,
-        ':content' => $content,
+        ':kod'   => $kodPersons,
+        ':title' => $title,
+        ':txt'   => $content,
     ]);
     return (int) $db->lastInsertId();
 }
@@ -397,13 +399,13 @@ function insertIntoFacts(PDO $db, ?int $kodPersons, ?string $title, ?string $con
 function insertIntoPoetry(PDO $db, ?int $kodPersons, ?string $title, ?string $content): int
 {
     $stmt = $db->prepare(
-        'INSERT INTO poetry (KodPersons, title, content, date_registration)
-         VALUES (:kod, :title, :content, NOW())'
+        "INSERT INTO poetry (KodPersons, NamePoetry, Poetry, approve, date_registration)
+         VALUES (:kod, :name, :poetry, 'YES', NOW())"
     );
     $stmt->execute([
-        ':kod'     => $kodPersons,
-        ':title'   => $title,
-        ':content' => $content,
+        ':kod'    => $kodPersons,
+        ':name'   => $title,
+        ':poetry' => $content,
     ]);
     return (int) $db->lastInsertId();
 }
