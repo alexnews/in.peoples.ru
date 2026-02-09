@@ -7,6 +7,9 @@ RewriteRule ^(.*)$ https://in.peoples.ru/$1 [R=301,L]
 # Disable directory listing
 Options -Indexes
 
+# Serve JS/CSS/HTML as UTF-8
+AddCharset UTF-8 .js .css .html
+
 # Block common bots
 RewriteCond %{HTTP_USER_AGENT} (Mediatoolkitbot|PetalBot|ClaudeBot|GPTBot|Bytespider|AhrefsBot|SemrushBot) [NC]
 RewriteRule .* - [F,L]

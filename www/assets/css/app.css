@@ -240,6 +240,16 @@ a:hover {
     font-size: .78rem;
     color: var(--text-muted);
 }
+.person-autocomplete-suggest {
+    padding: .5rem .75rem;
+    font-size: .8rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+}
+.person-autocomplete-suggest a {
+    color: var(--primary);
+}
 .person-autocomplete-item .person-epigraph {
     font-size: .72rem;
     color: #999;

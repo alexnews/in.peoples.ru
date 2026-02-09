@@ -135,6 +135,12 @@
             );
             $dropdown.append($item);
         });
+
+        // "Suggest new person" link at the bottom
+        var $suggest = $('<div class="person-autocomplete-suggest" />')
+            .html('<i class="bi bi-person-plus me-1"></i>Не нашли? <a href="/user/suggest-person.php">Предложить новую персону</a>');
+        $dropdown.append($suggest);
+
         $dropdown.addClass('show');
 
         $dropdown.find('.person-autocomplete-item').on('click', function () {

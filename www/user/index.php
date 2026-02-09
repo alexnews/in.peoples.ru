@@ -112,31 +112,55 @@ $statusBadge = [
     </div>
 </div>
 
-<!-- Quick Actions -->
-<h5 class="mb-3"><i class="bi bi-lightning me-1"></i>Быстрые действия</h5>
+<!-- Add Content — Section Cards -->
+<h5 class="mb-3"><i class="bi bi-plus-circle me-1"></i>Добавить материал</h5>
 <div class="row g-3 mb-4">
     <div class="col-6 col-md-3">
         <a href="/user/submit.php?section=2" class="quick-action">
             <i class="bi bi-book"></i>
-            <span>Написать биографию</span>
-        </a>
-    </div>
-    <div class="col-6 col-md-3">
-        <a href="/user/submit.php?section=4" class="quick-action">
-            <i class="bi bi-newspaper"></i>
-            <span>Добавить новость</span>
+            <span>Биография</span>
         </a>
     </div>
     <div class="col-6 col-md-3">
         <a href="/user/submit.php?section=3" class="quick-action">
             <i class="bi bi-camera"></i>
-            <span>Загрузить фото</span>
+            <span>Фотографии</span>
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="/user/submit.php?section=4" class="quick-action">
+            <i class="bi bi-newspaper"></i>
+            <span>Новости</span>
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="/user/submit.php?section=5" class="quick-action">
+            <i class="bi bi-chat-quote"></i>
+            <span>Цитаты</span>
         </a>
     </div>
     <div class="col-6 col-md-3">
         <a href="/user/submit.php?section=7" class="quick-action">
             <i class="bi bi-lightbulb"></i>
-            <span>Добавить факт</span>
+            <span>Факты</span>
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="/user/submit.php?section=8" class="quick-action">
+            <i class="bi bi-star"></i>
+            <span>Интересное</span>
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="/user/submit.php?section=19" class="quick-action">
+            <i class="bi bi-file-text"></i>
+            <span>Статьи</span>
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="/user/submit.php" class="quick-action" style="border-style:dashed;color:var(--text-muted)">
+            <i class="bi bi-three-dots"></i>
+            <span>Другое</span>
         </a>
     </div>
 </div>
