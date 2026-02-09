@@ -30,6 +30,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!validateCsrfToken($_POST['csrf_token'] ?? '')) {
         $errors['general'] = 'Ошибка безопасности. Попробуйте ещё раз.';
     } else {
+        // Honeypot check — if filled, it's a bot
+        if (!empty($_POST['website'])) {
+            $errors['general'] = 'Ошибка отправки формы.';
+        }
+
+        // Bot token check
+        $botToken = $_POST['bot_token'] ?? '';
+        if (empty($botToken) || !preg_match('/^ok_\d{10,13}$/', $botToken)) {
+            $errors['bot_check'] = 'Подтвердите, что вы не робот';
+        } else {
+            $tokenTime = (int) substr($botToken, 3);
+            $now = (int) (microtime(true) * 1000);
+            // Token must be between 1 second and 10 minutes old
+            if (($now - $tokenTime) < 1000 || ($now - $tokenTime) > 600000) {
+                $errors['bot_check'] = 'Подтвердите, что вы не робот';
+            }
+        }
+
         $username    = trim($_POST['username'] ?? '');
         $email       = trim($_POST['email'] ?? '');
         $displayName = trim($_POST['display_name'] ?? '');
@@ -167,6 +185,26 @@ function translateError(string $msg): string
                 <?php endif; ?>
             </div>
 
+            <!-- Honeypot — hidden from humans, bots fill it -->
+            <div style="position:absolute;left:-9999px" aria-hidden="true">
+                <input type="text" name="website" tabindex="-1" autocomplete="off">
+            </div>
+
+            <!-- JS bot check -->
+            <div class="mb-3">
+                <div class="bot-check p-3 border rounded d-flex align-items-center gap-3 <?= isset($errors['bot_check']) ? 'border-danger' : '' ?>" id="bot-check-widget">
+                    <div class="form-check mb-0">
+                        <input type="checkbox" class="form-check-input" id="not-a-robot" style="width:1.4em;height:1.4em;cursor:pointer">
+                        <label class="form-check-label ms-1" for="not-a-robot" style="cursor:pointer;user-select:none">Я не робот</label>
+                    </div>
+                    <div id="bot-check-status" class="ms-auto text-muted small"></div>
+                </div>
+                <input type="hidden" name="bot_token" id="bot-token" value="">
+                <?php if (isset($errors['bot_check'])): ?>
+                <div class="text-danger small mt-1"><?= htmlspecialchars($errors['bot_check'], ENT_QUOTES, 'UTF-8') ?></div>
+                <?php endif; ?>
+            </div>
+
             <button type="submit" class="btn btn-primary w-100 mb-3">Зарегистрироваться</button>
 
             <div class="text-center">
@@ -179,10 +217,38 @@ function translateError(string $msg): string
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // Bot check widget
+    var checkbox = document.getElementById('not-a-robot');
+    var tokenField = document.getElementById('bot-token');
+    var status = document.getElementById('bot-check-status');
+    var widget = document.getElementById('bot-check-widget');
+
+    if (checkbox) {
+        checkbox.addEventListener('change', function () {
+            if (this.checked) {
+                this.disabled = true;
+                status.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+                // Small delay to mimic verification
+                setTimeout(function () {
+                    tokenField.value = 'ok_' + Date.now();
+                    status.innerHTML = '<i class="bi bi-check-circle-fill text-success" style="font-size:1.4em"></i>';
+                    widget.classList.remove('border-danger');
+                    widget.classList.add('border-success');
+                }, 600 + Math.random() * 400);
+            }
+        });
+    }
+
     var form = document.getElementById('register-form');
     if (!form) return;
 
     form.addEventListener('submit', function (e) {
+        // Check bot verification
+        if (!tokenField.value) {
+            e.preventDefault();
+            widget.classList.add('border-danger');
+            return false;
+        }
         var password = document.getElementById('password').value;
         var confirm = document.getElementById('password_confirm').value;
         var confirmField = document.getElementById('password_confirm');
