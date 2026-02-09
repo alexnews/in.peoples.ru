@@ -410,6 +410,64 @@ On request_revision:
 
 ---
 
+### POST /api/v1/moderate/person-review.php
+
+Moderator reviews a person suggestion (content quality check).
+Does NOT push to `persons` table — only changes status in `user_person_suggestions`.
+
+**Request:**
+```json
+{
+    "suggestion_id": 5,
+    "action": "approve",
+    "note": "Content looks good"
+}
+```
+
+`action`: `approve`, `reject`, `request_revision`
+
+On approve: status → 'approved', user reputation +5, logged to `users_moderation_log`.
+On reject: status → 'rejected', user reputation -2.
+On request_revision: note is required.
+
+**Response (200):**
+```json
+{ "success": true, "data": { "id": 5, "action": "approve" } }
+```
+
+---
+
+### POST /api/v1/moderate/person-push.php
+
+**Admin-only.** Push an approved person suggestion to the real `persons` table.
+This is the only place where user-suggested data enters `persons`.
+
+**Request:**
+```json
+{
+    "suggestion_id": 5
+}
+```
+
+On push:
+1. INSERT into `persons` (approve='NO', admin sets URL/path/structure later)
+2. INSERT into `histories` (biography linked to new Persons_id)
+3. UPDATE `user_person_suggestions`: status='published', published_person_id=new ID
+4. Award +10 reputation to user
+5. Log to `users_moderation_log`
+
+**Response (200):**
+```json
+{
+    "success": true,
+    "data": { "person_id": 12345, "histories_id": 67890, "suggestion_id": 5 }
+}
+```
+
+**Errors:** 400 (not approved), 403 (not admin), 404 (not found)
+
+---
+
 ### GET /api/v1/moderate/stats.php
 
 **Response (200):**

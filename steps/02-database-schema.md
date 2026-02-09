@@ -1,10 +1,13 @@
-# Database Schema: New Tables (4 tables only)
+# Database Schema: New Tables (5 tables)
 
 All new tables live in the existing `peoplesru` database.
 All use `CHARACTER SET cp1251 COLLATE cp1251_general_ci` to match existing schema.
 
-Content is NOT stored in new tables — it goes directly into existing tables
+Content submissions are staged in `user_submissions`, then published into existing tables
 (`histories`, `photo`, `news`, etc.) via the `peoples_section` mapping after moderation.
+
+Person suggestions are staged in a **separate** `user_person_suggestions` table and follow
+a 3-step flow: User → Moderator (content quality) → Admin (push to `persons` table).
 
 ---
 
@@ -92,14 +95,14 @@ user_submissions.section_id = 2
   → Set published_id = histories.Histories_id
 ```
 
-## 4. moderation_log (Audit Trail)
+## 4. users_moderation_log (Audit Trail)
 
 ```sql
-CREATE TABLE moderation_log (
+CREATE TABLE users_moderation_log (
     id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     moderator_id    INT UNSIGNED NOT NULL,
     action          ENUM('approve', 'reject', 'request_revision', 'ban_user', 'unban_user', 'promote', 'demote') NOT NULL,
-    target_type     VARCHAR(50) NOT NULL,       -- 'submission', 'user'
+    target_type     VARCHAR(50) NOT NULL,       -- 'submission', 'user', 'person_suggestion'
     target_id       INT UNSIGNED NOT NULL,
     note            TEXT DEFAULT NULL,
     created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -110,6 +113,59 @@ CREATE TABLE moderation_log (
     CONSTRAINT fk_modlog_moderator FOREIGN KEY (moderator_id) REFERENCES users(id)
 ) ENGINE=InnoDB CHARACTER SET cp1251 COLLATE cp1251_general_ci;
 ```
+
+## 5. user_person_suggestions (Person Suggestion Staging)
+
+Separate from `user_submissions`. Stores structured person data for the 3-step approval flow:
+User submits → Moderator checks content quality → Admin checks for duplicates and pushes to `persons`.
+
+```sql
+CREATE TABLE user_person_suggestions (
+    id                  INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id             INT UNSIGNED NOT NULL,
+
+    -- Person fields (structured data)
+    NameRus             VARCHAR(255) NOT NULL,
+    SurNameRus          VARCHAR(255) NOT NULL,
+    NameEngl            VARCHAR(255) DEFAULT NULL,
+    SurNameEngl         VARCHAR(255) DEFAULT NULL,
+    DateIn              DATE DEFAULT NULL,
+    DateOut             DATE DEFAULT NULL,
+    gender              CHAR(1) DEFAULT NULL,
+    TownIn              VARCHAR(255) DEFAULT NULL,
+    cc2born             CHAR(2) DEFAULT NULL,
+    cc2dead             CHAR(2) DEFAULT NULL,
+    cc2                 CHAR(2) DEFAULT NULL,
+
+    -- Content
+    biography           MEDIUMTEXT DEFAULT NULL,    -- Biography text written by user
+    source_url          VARCHAR(500) DEFAULT NULL,
+
+    -- Moderation (moderator checks content quality)
+    status              ENUM('pending', 'approved', 'rejected', 'revision_requested', 'published') DEFAULT 'pending',
+    moderator_id        INT UNSIGNED DEFAULT NULL,
+    moderator_note      TEXT DEFAULT NULL,
+    reviewed_at         DATETIME DEFAULT NULL,
+
+    -- Admin push (admin checks duplicates, pushes to real persons table)
+    published_person_id INT DEFAULT NULL,           -- Persons_id after admin pushes to persons
+    published_at        DATETIME DEFAULT NULL,
+
+    created_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    KEY idx_user_id (user_id),
+    KEY idx_status (status),
+    KEY idx_created (created_at),
+    CONSTRAINT fk_person_suggestion_user FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB CHARACTER SET cp1251 COLLATE cp1251_general_ci;
+```
+
+**Why a separate table (not `user_submissions`)?**
+- Never trust user data directly into production tables
+- Person suggestions need an extra admin step (duplicate check before push)
+- Structured columns (NameRus, SurNameRus, etc.) instead of JSON blob
+- Person created with `approve='NO'` — admin sets AllUrlInSity, path, KodStructure later
 
 ---
 
@@ -125,7 +181,9 @@ SOURCE/MIGRATIONS/
 ├── 003_rollback_user_submissions.sql
 ├── 004_create_moderation_log.sql
 ├── 004_rollback_moderation_log.sql
-└── seed_admin_user.sql
+├── 005_seed_admin_user.sql
+├── 006_add_person_data.sql          -- creates user_person_suggestions
+└── 006_rollback_person_data.sql
 ```
 
 ## Approval Logic Per Section
@@ -144,9 +202,24 @@ When moderator approves a submission, the API looks up `peoples_section` and INS
 
 Each target table has different columns. The approval handler needs section-specific INSERT logic (a switch/match on section_id).
 
-## No Additional Tables Needed
+## Person Suggestion Flow
 
-- **No separate content tables** — existing tables handle all content
+```
+user_person_suggestions.status:
+  pending → (moderator approves) → approved → (admin pushes) → published
+  pending → (moderator rejects) → rejected
+  pending → (moderator requests revision) → revision_requested → pending (user resubmits)
+```
+
+On admin push (`person-push.php`):
+1. INSERT into `persons` (approve='NO', admin sets URL/path/structure later)
+2. INSERT into `histories` (biography linked to new Persons_id)
+3. UPDATE `user_person_suggestions.published_person_id` = new Persons_id
+4. UPDATE `users.reputation` += 10
+5. INSERT into `users_moderation_log`
+
+## Notes
+
 - **No reputation tables** — `users.reputation` INT field is enough for now; add tables later if gamification grows
 - **No badge tables** — not needed for v1
 - **No version history tables** — not needed for v1 (can add later)

@@ -31,7 +31,7 @@ www/                        # Apache DocumentRoot
 │   ├── photos/             # upload, list, delete
 │   ├── persons/            # search existing persons table
 │   ├── comments/           # list, create, delete
-│   └── moderate/           # queue, review, users, stats
+│   └── moderate/           # queue, review, users, stats, person-review, person-push
 ├── user/                   # User portal (auth required)
 ├── moderate/               # Moderation panel (moderator+ role)
 ├── includes/               # Shared PHP: db, auth, encoding, validation
@@ -43,14 +43,18 @@ www/                        # Apache DocumentRoot
 
 Connects to the existing `peoplesru` database. **Does NOT create a new database.**
 
-### New tables (4 only):
+### New tables (5):
 - `users` — user accounts
 - `user_sessions` — server-side session storage
-- `user_submissions` — moderation staging queue
-- `moderation_log` — audit trail
+- `user_submissions` — moderation staging queue for content
+- `users_moderation_log` — audit trail
+- `user_person_suggestions` — person suggestion staging (separate 3-step flow)
 
 ### Content flow:
 User submits content → `user_submissions` (staging) → moderator approves → INSERT into **existing** target table.
+
+### Person suggestion flow:
+User suggests person → `user_person_suggestions` → moderator approves (content quality) → admin checks duplicates and pushes → INSERT into `persons` + `histories`.
 
 The target table is determined by `peoples_section.table_name`:
 - section_id=2 → `histories` (biographies)
