@@ -339,7 +339,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     var actions = card.querySelector('.mt-3.d-flex');
                     if (actions) actions.remove();
                 } else {
-                    alert(data.error || 'Ошибка');
+                    alert(data.error?.message || data.error || 'Ошибка');
                     btn.disabled = false;
                     btn.innerHTML = action === 'approve' ? '<i class="bi bi-check-lg me-1"></i>Одобрить' : 'Повторить';
                 }
@@ -378,7 +378,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         '<span class="badge bg-primary">Persons_id: ' + data.data.person_id + '</span>' +
                         '<span class="text-muted ms-2 small">Создано только что</span>';
                 } else {
-                    alert(data.error || 'Ошибка');
+                    alert(data.error?.message || data.error || 'Ошибка');
                     btn.disabled = false;
                     btn.innerHTML = '<i class="bi bi-plus-circle me-1"></i>Создать персону в базе';
                 }
