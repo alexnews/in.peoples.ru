@@ -343,6 +343,19 @@ function insertIntoNews(
     ?string $photoPath,
     int $userId
 ): int {
+    // Wrap plain text in <p> tags if not already formatted
+    if ($content && stripos($content, '<p>') === false && stripos($content, '<p ') === false) {
+        $contentUtf8 = fromDb($content);
+        $contentUtf8 = str_replace(["\r\n", "\r"], "\n", $contentUtf8);
+        $paragraphs = preg_split('/\n\s*\n/', $contentUtf8, -1, PREG_SPLIT_NO_EMPTY);
+        $wrapped = array_map(function ($p) {
+            $p = trim($p);
+            $p = str_replace("\n", "<br>\n", $p);
+            return '<p>' . $p . '</p>';
+        }, $paragraphs);
+        $content = toDb(implode("\n", $wrapped));
+    }
+
     // Move photo to person's production folder if present
     $namePhoto = null;
     if ($photoPath && $kodPersons) {
