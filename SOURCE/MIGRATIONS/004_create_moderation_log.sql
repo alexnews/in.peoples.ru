@@ -1,7 +1,7 @@
--- Migration 004: Create moderation_log table
+-- Migration 004: Create users_moderation_log table
 -- Database: peoplesru
 
-CREATE TABLE IF NOT EXISTS moderation_log (
+CREATE TABLE IF NOT EXISTS users_moderation_log (
     id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     moderator_id    INT UNSIGNED NOT NULL,
     action          ENUM('approve', 'reject', 'request_revision', 'ban_user', 'unban_user', 'promote', 'demote') NOT NULL,
