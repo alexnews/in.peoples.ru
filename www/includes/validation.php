@@ -29,9 +29,9 @@ function validateEmail(string $email): bool
  * - Contains at least one digit
  *
  * @param string $password Password to validate
- * @return string|true Error message string on failure, true on success
+ * @return string|bool Error message string on failure, true on success
  */
-function validatePassword(string $password): string|true
+function validatePassword(string $password): string|bool
 {
     $length = mb_strlen($password, 'UTF-8');
 
@@ -63,9 +63,9 @@ function validatePassword(string $password): string|true
  * - Must start with a letter or digit
  *
  * @param string $username Username to validate
- * @return string|true Error message string on failure, true on success
+ * @return string|bool Error message string on failure, true on success
  */
-function validateUsername(string $username): string|true
+function validateUsername(string $username): string|bool
 {
     $length = mb_strlen($username, 'UTF-8');
 
@@ -133,13 +133,13 @@ function sanitizeHtml(string $html): string
  * @param array $file Entry from $_FILES
  * @param int $maxSize Maximum file size in bytes (default 10 MB)
  * @param array $allowedTypes Allowed MIME types
- * @return string|true Error message string on failure, true on success
+ * @return string|bool Error message string on failure, true on success
  */
 function validateUploadedFile(
     array $file,
     int $maxSize = 10485760,
     array $allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
-): string|true {
+): string|bool {
     // Check for upload errors
     if (!isset($file['error']) || !isset($file['tmp_name'])) {
         return 'Invalid file upload data';
