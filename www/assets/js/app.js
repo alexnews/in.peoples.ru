@@ -584,9 +584,9 @@
             $photoGroup.hide();
             $inlinePhotoBtn.show();
         } else {
-            // All other sections: content only, no photos
+            // All other sections: content + photo dropzone for attachments
             $contentGroup.show();
-            $photoGroup.hide();
+            $photoGroup.show().removeClass('photo-prominent');
             $inlinePhotoBtn.hide();
         }
 
