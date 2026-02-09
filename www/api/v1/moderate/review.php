@@ -236,7 +236,7 @@ jsonSuccess(fromDbArray($result));
 /**
  * Generate a URL-safe slug from a UTF-8 title.
  */
-function generateUrlSlug(string $title): string
+function generateUrlSlug(string $title, int $maxLength = 60): string
 {
     // Transliterate Cyrillic
     $slug = transliterateCyrillic($title);
@@ -246,6 +246,15 @@ function generateUrlSlug(string $title): string
 
     if ($slug === '') {
         $slug = 'article-' . time();
+    }
+
+    // Truncate to max length, break at word boundary (last hyphen)
+    if (strlen($slug) > $maxLength) {
+        $slug = substr($slug, 0, $maxLength);
+        $lastHyphen = strrpos($slug, '-');
+        if ($lastHyphen !== false && $lastHyphen > $maxLength * 0.6) {
+            $slug = substr($slug, 0, $lastHyphen);
+        }
     }
 
     return $slug;
@@ -368,6 +377,9 @@ function insertIntoNews(
         }
     }
 
+    // News paths must end with .shtml
+    $newsPath = $nameUrlArticle . '.shtml';
+
     $stmt = $db->prepare(
         "INSERT INTO news (
             KodPersons, title, title_article, description, article,
@@ -383,7 +395,7 @@ function insertIntoNews(
         ':title_article' => $title,
         ':descr'         => $epigraph,
         ':article'       => $content,
-        ':path'          => $nameUrlArticle,
+        ':path'          => $newsPath,
         ':photo'         => $namePhoto,
         ':uid'           => $userId,
     ]);
