@@ -130,14 +130,15 @@ function loginUser(string $login, string $password): array
     $db = getDb();
 
     // Try to find user by email or username
+    $loginDb = toDb($login);
     $stmt = $db->prepare(
         'SELECT id, username, email, password_hash, display_name, avatar_path,
                 role, status, reputation, bio, last_login, login_ip, created_at, updated_at
          FROM users
-         WHERE email = :login OR username = :login
+         WHERE email = :login_email OR username = :login_user
          LIMIT 1'
     );
-    $stmt->execute([':login' => toDb($login)]);
+    $stmt->execute([':login_email' => $loginDb, ':login_user' => $loginDb]);
     $user = $stmt->fetch();
 
     if (!$user) {
