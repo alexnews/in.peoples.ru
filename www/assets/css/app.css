@@ -240,6 +240,14 @@ a:hover {
     font-size: .78rem;
     color: var(--text-muted);
 }
+.person-autocomplete-item .person-epigraph {
+    font-size: .72rem;
+    color: #999;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 400px;
+}
 
 .selected-person-card {
     display: flex;

@@ -95,14 +95,25 @@
         });
     }
 
+    var ruMonths = ['', '\u044f\u043d\u0432\u0430\u0440\u044f', '\u0444\u0435\u0432\u0440\u0430\u043b\u044f', '\u043c\u0430\u0440\u0442\u0430', '\u0430\u043f\u0440\u0435\u043b\u044f', '\u043c\u0430\u044f', '\u0438\u044e\u043d\u044f', '\u0438\u044e\u043b\u044f', '\u0430\u0432\u0433\u0443\u0441\u0442\u0430', '\u0441\u0435\u043d\u0442\u044f\u0431\u0440\u044f', '\u043e\u043a\u0442\u044f\u0431\u0440\u044f', '\u043d\u043e\u044f\u0431\u0440\u044f', '\u0434\u0435\u043a\u0430\u0431\u0440\u044f'];
+
+    function formatRuDate(dateStr) {
+        if (!dateStr) return '';
+        var parts = dateStr.split('-');
+        if (parts.length !== 3) return dateStr;
+        var day = parseInt(parts[2], 10);
+        var month = parseInt(parts[1], 10);
+        return day + ' ' + (ruMonths[month] || '') + ' ' + parts[0];
+    }
+
     function renderAutocomplete(items, $dropdown) {
         $dropdown.empty();
         $.each(items, function (i, p) {
             var photoUrl = (p.photo && p.path) ? p.path + p.photo : '';
             var dates = '';
             if (p.dates && p.dates.birth) {
-                dates = p.dates.birth;
-                if (p.dates.death) dates += ' \u2014 ' + p.dates.death;
+                dates = formatRuDate(p.dates.birth);
+                if (p.dates.death) dates += ' \u2014 ' + formatRuDate(p.dates.death);
             }
             var $item = $('<div class="person-autocomplete-item" />')
                 .attr('data-id', p.id)
@@ -119,6 +130,7 @@
                 '<div class="person-info">' +
                     '<div class="person-name">' + escHtml(p.name) + '</div>' +
                     (dates ? '<div class="person-dates">' + escHtml(dates) + '</div>' : '') +
+                    (p.epigraph ? '<div class="person-epigraph">' + escHtml(p.epigraph) + '</div>' : '') +
                 '</div>'
             );
             $dropdown.append($item);
