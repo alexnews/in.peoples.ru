@@ -19,6 +19,8 @@ require_once dirname(__DIR__, 2) . '/includes/permissions.php';
 require_once dirname(__DIR__, 2) . '/includes/csrf.php';
 require_once dirname(__DIR__, 2) . '/includes/response.php';
 
+header('Content-Type: text/html; charset=UTF-8');
+
 if (!isset($noAuth) || $noAuth !== true) {
     $currentUser = getCurrentUser();
     if ($currentUser === null) {

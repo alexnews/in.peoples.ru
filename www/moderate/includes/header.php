@@ -15,6 +15,8 @@ require_once __DIR__ . '/../../includes/session.php';
 require_once __DIR__ . '/../../includes/permissions.php';
 require_once __DIR__ . '/../../includes/csrf.php';
 
+header('Content-Type: text/html; charset=UTF-8');
+
 $currentUser = getCurrentUser();
 $csrfToken = generateCsrfToken();
 
