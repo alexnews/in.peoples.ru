@@ -44,6 +44,14 @@ $stmt = $db->query(
 );
 $activeUsers = (int) $stmt->fetchColumn();
 
+// Pending person suggestions
+$stmt = $db->query("SELECT COUNT(*) FROM user_person_suggestions WHERE status = 'pending'");
+$pendingPersons = (int) $stmt->fetchColumn();
+
+// Approved person suggestions awaiting admin push
+$stmt = $db->query("SELECT COUNT(*) FROM user_person_suggestions WHERE status = 'approved' AND published_person_id IS NULL");
+$approvedPersonsAwaitingPush = (int) $stmt->fetchColumn();
+
 // ── Pending by type ────────────────────────────────────────────────────────
 
 $stmt = $db->query(
@@ -191,6 +199,33 @@ require_once __DIR__ . '/includes/header.php';
                         <span class="badge bg-warning text-dark rounded-pill"><?= (int) $item['pending_count'] ?></span>
                     </a>
                     <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <!-- Person Suggestions -->
+        <?php if ($pendingPersons > 0 || $approvedPersonsAwaitingPush > 0): ?>
+        <div class="card card-mod mb-4">
+            <div class="card-header bg-transparent">
+                <h5 class="card-title mb-0"><i class="bi bi-person-plus me-2"></i>Предложения персон</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <?php if ($pendingPersons > 0): ?>
+                    <a href="/moderate/persons.php?status=pending" class="list-group-item list-group-item-action d-flex align-items-center">
+                        <span class="section-icon section-icon-default me-3"><i class="bi bi-hourglass-split"></i></span>
+                        <span class="flex-grow-1">Ожидают проверки модератором</span>
+                        <span class="badge bg-warning text-dark rounded-pill"><?= $pendingPersons ?></span>
+                    </a>
+                    <?php endif; ?>
+                    <?php if ($approvedPersonsAwaitingPush > 0): ?>
+                    <a href="/moderate/persons.php?status=approved" class="list-group-item list-group-item-action d-flex align-items-center">
+                        <span class="section-icon section-icon-default me-3"><i class="bi bi-arrow-up-circle"></i></span>
+                        <span class="flex-grow-1">Одобрены, ожидают добавления администратором</span>
+                        <span class="badge bg-info rounded-pill"><?= $approvedPersonsAwaitingPush ?></span>
+                    </a>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

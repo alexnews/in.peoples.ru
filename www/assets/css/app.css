@@ -544,3 +544,32 @@ a:hover {
         font-size: 1.25rem;
     }
 }
+
+/* ---- Suggest Person form ---- */
+.suggest-person-section .card-header {
+    font-weight: 600;
+    font-size: .9rem;
+    background-color: #f8f9fa;
+    padding: .6rem 1rem;
+}
+
+.cc2-input {
+    text-transform: uppercase;
+    text-align: center;
+    letter-spacing: .1em;
+    font-weight: 600;
+}
+
+.gender-btn-group {
+    display: flex;
+    gap: .25rem;
+}
+.gender-btn-group .btn {
+    flex: 1;
+}
+
+.new-person-badge {
+    background-color: #fd7e14;
+    color: #fff;
+    font-size: .75rem;
+}

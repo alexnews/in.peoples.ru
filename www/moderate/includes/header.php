@@ -27,6 +27,10 @@ $db = getDb();
 $badgeStmt = $db->query("SELECT COUNT(*) FROM user_submissions WHERE status = 'pending'");
 $pendingCount = (int) $badgeStmt->fetchColumn();
 
+// Pending person suggestions count
+$personBadgeStmt = $db->query("SELECT COUNT(*) FROM user_person_suggestions WHERE status = 'pending'");
+$pendingPersonCount = (int) $personBadgeStmt->fetchColumn();
+
 $pageTitle = $pageTitle ?? 'Модерация';
 $currentPage = basename($_SERVER['SCRIPT_NAME']);
 ?>
@@ -66,6 +70,14 @@ $currentPage = basename($_SERVER['SCRIPT_NAME']);
                         <i class="bi bi-inbox me-1"></i>Очередь
                         <?php if ($pendingCount > 0): ?>
                             <span class="badge bg-warning text-dark ms-1 pending-badge"><?= $pendingCount ?></span>
+                        <?php endif; ?>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= $currentPage === 'persons.php' ? 'active' : '' ?>" href="/moderate/persons.php">
+                        <i class="bi bi-person-plus me-1"></i>Персоны
+                        <?php if ($pendingPersonCount > 0): ?>
+                            <span class="badge bg-warning text-dark ms-1 pending-badge"><?= $pendingPersonCount ?></span>
                         <?php endif; ?>
                     </a>
                 </li>

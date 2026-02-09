@@ -2,8 +2,12 @@
 /**
  * Suggest a new person — requires auth.
  *
- * Simple form that creates a special submission (section_id=2, biography)
- * with person details for an admin to review and create in the persons table.
+ * Structured form that collects person data (names, dates, gender, etc.)
+ * and a biography. Inserts into `user_person_suggestions` table (separate
+ * from user_submissions).
+ *
+ * Flow: User submits → Moderator checks content quality → Admin checks
+ * for duplicates in `persons` and pushes to the real table.
  */
 
 declare(strict_types=1);
@@ -17,52 +21,86 @@ $userId = (int) $currentUser['id'];
 $success = false;
 $errors = [];
 $values = [
-    'name_rus' => '',
-    'name_eng' => '',
-    'birth_date' => '',
+    'SurNameRus'  => '',
+    'NameRus'     => '',
+    'SurNameEngl' => '',
+    'NameEngl'    => '',
+    'DateIn'      => '',
+    'DateOut'     => '',
+    'gender'      => '',
+    'TownIn'      => '',
+    'cc2born'     => '',
+    'cc2dead'     => '',
+    'cc2'         => '',
     'description' => '',
-    'source_url' => '',
+    'source_url'  => '',
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!validateCsrfToken($_POST['csrf_token'] ?? '')) {
         $errors['general'] = 'Ошибка безопасности. Попробуйте ещё раз.';
     } else {
-        $values['name_rus'] = trim($_POST['name_rus'] ?? '');
-        $values['name_eng'] = trim($_POST['name_eng'] ?? '');
-        $values['birth_date'] = trim($_POST['birth_date'] ?? '');
-        $values['description'] = trim($_POST['description'] ?? '');
-        $values['source_url'] = trim($_POST['source_url'] ?? '');
-
-        if (mb_strlen($values['name_rus'], 'UTF-8') < 2) {
-            $errors['name_rus'] = 'Укажите имя на русском';
+        foreach (array_keys($values) as $key) {
+            $values[$key] = trim($_POST[$key] ?? '');
         }
-        if (mb_strlen($values['description'], 'UTF-8') < 10) {
-            $errors['description'] = 'Опишите, кто этот человек (минимум 10 символов)';
+
+        // Validation
+        if (mb_strlen($values['SurNameRus'], 'UTF-8') < 2) {
+            $errors['SurNameRus'] = 'Укажите фамилию на русском (минимум 2 символа)';
+        }
+        if (mb_strlen($values['NameRus'], 'UTF-8') < 2) {
+            $errors['NameRus'] = 'Укажите имя на русском (минимум 2 символа)';
+        }
+        if (mb_strlen($values['description'], 'UTF-8') < 50) {
+            $errors['description'] = 'Опишите биографию подробнее (минимум 50 символов)';
+        }
+        if ($values['gender'] !== '' && !in_array($values['gender'], ['m', 'f'], true)) {
+            $errors['gender'] = 'Некорректное значение';
+        }
+        if ($values['DateIn'] !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $values['DateIn'])) {
+            $errors['DateIn'] = 'Формат: ГГГГ-ММ-ДД';
+        }
+        if ($values['DateOut'] !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $values['DateOut'])) {
+            $errors['DateOut'] = 'Формат: ГГГГ-ММ-ДД';
+        }
+        if ($values['cc2born'] !== '' && !preg_match('/^[A-Za-z]{2}$/', $values['cc2born'])) {
+            $errors['cc2born'] = 'Код страны — 2 латинские буквы';
+        }
+        if ($values['cc2dead'] !== '' && !preg_match('/^[A-Za-z]{2}$/', $values['cc2dead'])) {
+            $errors['cc2dead'] = 'Код страны — 2 латинские буквы';
+        }
+        if ($values['cc2'] !== '' && !preg_match('/^[A-Za-z]{2}$/', $values['cc2'])) {
+            $errors['cc2'] = 'Код страны — 2 латинские буквы';
         }
 
         if (empty($errors)) {
-            // Create a submission with the person suggestion
-            $title = 'Новая персона: ' . $values['name_rus'];
-            $content = '<p><strong>Имя (рус.):</strong> ' . htmlspecialchars($values['name_rus'], ENT_QUOTES, 'UTF-8') . '</p>';
-            if ($values['name_eng']) {
-                $content .= '<p><strong>Имя (англ.):</strong> ' . htmlspecialchars($values['name_eng'], ENT_QUOTES, 'UTF-8') . '</p>';
-            }
-            if ($values['birth_date']) {
-                $content .= '<p><strong>Дата рождения:</strong> ' . htmlspecialchars($values['birth_date'], ENT_QUOTES, 'UTF-8') . '</p>';
-            }
-            $content .= '<p><strong>Описание:</strong> ' . htmlspecialchars($values['description'], ENT_QUOTES, 'UTF-8') . '</p>';
-
             $stmt = $db->prepare(
-                'INSERT INTO user_submissions (user_id, section_id, title, content, epigraph, source_url, status, created_at, updated_at)
-                 VALUES (:uid, 2, :title, :content, :epigraph, :source, \'pending\', NOW(), NOW())'
+                'INSERT INTO user_person_suggestions
+                    (user_id, NameRus, SurNameRus, NameEngl, SurNameEngl,
+                     DateIn, DateOut, gender, TownIn,
+                     cc2born, cc2dead, cc2,
+                     biography, source_url, status, created_at, updated_at)
+                 VALUES
+                    (:uid, :nameRus, :surNameRus, :nameEngl, :surNameEngl,
+                     :dateIn, :dateOut, :gender, :townIn,
+                     :cc2born, :cc2dead, :cc2,
+                     :biography, :source_url, \'pending\', NOW(), NOW())'
             );
             $stmt->execute([
-                ':uid' => $userId,
-                ':title' => toDb($title),
-                ':content' => toDb($content),
-                ':epigraph' => toDb($values['description']),
-                ':source' => toDb($values['source_url']),
+                ':uid'         => $userId,
+                ':nameRus'     => toDb($values['NameRus']),
+                ':surNameRus'  => toDb($values['SurNameRus']),
+                ':nameEngl'    => $values['NameEngl'] !== '' ? toDb($values['NameEngl']) : null,
+                ':surNameEngl' => $values['SurNameEngl'] !== '' ? toDb($values['SurNameEngl']) : null,
+                ':dateIn'      => $values['DateIn'] !== '' ? $values['DateIn'] : null,
+                ':dateOut'     => $values['DateOut'] !== '' ? $values['DateOut'] : null,
+                ':gender'      => $values['gender'] !== '' ? $values['gender'] : null,
+                ':townIn'      => $values['TownIn'] !== '' ? toDb($values['TownIn']) : null,
+                ':cc2born'     => $values['cc2born'] !== '' ? strtoupper($values['cc2born']) : null,
+                ':cc2dead'     => $values['cc2dead'] !== '' ? strtoupper($values['cc2dead']) : null,
+                ':cc2'         => $values['cc2'] !== '' ? strtoupper($values['cc2']) : null,
+                ':biography'   => toDb($values['description']),
+                ':source_url'  => $values['source_url'] !== '' ? toDb($values['source_url']) : null,
             ]);
 
             $success = true;
@@ -97,40 +135,145 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <form method="POST" action="/user/suggest-person.php" novalidate>
             <?= csrfField() ?>
 
-            <div class="mb-3">
-                <label for="name_rus" class="form-label">Полное имя на русском <span class="text-danger">*</span></label>
-                <input type="text" class="form-control <?= isset($errors['name_rus']) ? 'is-invalid' : '' ?>"
-                       id="name_rus" name="name_rus"
-                       value="<?= htmlspecialchars($values['name_rus'], ENT_QUOTES, 'UTF-8') ?>"
-                       placeholder="Иван Петров" required>
-                <?php if (isset($errors['name_rus'])): ?>
-                <div class="invalid-feedback"><?= htmlspecialchars($errors['name_rus'], ENT_QUOTES, 'UTF-8') ?></div>
-                <?php endif; ?>
+            <!-- Names (Russian) -->
+            <div class="card suggest-person-section mb-3">
+                <div class="card-header"><i class="bi bi-person me-1"></i>Имя на русском <span class="text-danger">*</span></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="SurNameRus" class="form-label">Фамилия <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control <?= isset($errors['SurNameRus']) ? 'is-invalid' : '' ?>"
+                                   id="SurNameRus" name="SurNameRus"
+                                   value="<?= htmlspecialchars($values['SurNameRus'], ENT_QUOTES, 'UTF-8') ?>"
+                                   placeholder="Иванов" required>
+                            <?php if (isset($errors['SurNameRus'])): ?>
+                            <div class="invalid-feedback"><?= htmlspecialchars($errors['SurNameRus'], ENT_QUOTES, 'UTF-8') ?></div>
+                            <?php endif; ?>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="NameRus" class="form-label">Имя <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control <?= isset($errors['NameRus']) ? 'is-invalid' : '' ?>"
+                                   id="NameRus" name="NameRus"
+                                   value="<?= htmlspecialchars($values['NameRus'], ENT_QUOTES, 'UTF-8') ?>"
+                                   placeholder="Иван" required>
+                            <?php if (isset($errors['NameRus'])): ?>
+                            <div class="invalid-feedback"><?= htmlspecialchars($errors['NameRus'], ENT_QUOTES, 'UTF-8') ?></div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="mb-3">
-                <label for="name_eng" class="form-label">Полное имя на английском</label>
-                <input type="text" class="form-control" id="name_eng" name="name_eng"
-                       value="<?= htmlspecialchars($values['name_eng'], ENT_QUOTES, 'UTF-8') ?>"
-                       placeholder="Ivan Petrov">
+            <!-- Names (English) -->
+            <div class="card suggest-person-section mb-3">
+                <div class="card-header"><i class="bi bi-translate me-1"></i>Имя на английском</div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="SurNameEngl" class="form-label">Фамилия (англ.)</label>
+                            <input type="text" class="form-control" id="SurNameEngl" name="SurNameEngl"
+                                   value="<?= htmlspecialchars($values['SurNameEngl'], ENT_QUOTES, 'UTF-8') ?>"
+                                   placeholder="Ivanov">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="NameEngl" class="form-label">Имя (англ.)</label>
+                            <input type="text" class="form-control" id="NameEngl" name="NameEngl"
+                                   value="<?= htmlspecialchars($values['NameEngl'], ENT_QUOTES, 'UTF-8') ?>"
+                                   placeholder="Ivan">
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="mb-3">
-                <label for="birth_date" class="form-label">Дата рождения</label>
-                <input type="date" class="form-control" id="birth_date" name="birth_date"
-                       value="<?= htmlspecialchars($values['birth_date'], ENT_QUOTES, 'UTF-8') ?>">
+            <!-- Dates, gender, location -->
+            <div class="card suggest-person-section mb-3">
+                <div class="card-header"><i class="bi bi-calendar-event me-1"></i>Даты и место</div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="DateIn" class="form-label">Дата рождения</label>
+                            <input type="date" class="form-control <?= isset($errors['DateIn']) ? 'is-invalid' : '' ?>"
+                                   id="DateIn" name="DateIn"
+                                   value="<?= htmlspecialchars($values['DateIn'], ENT_QUOTES, 'UTF-8') ?>">
+                            <?php if (isset($errors['DateIn'])): ?>
+                            <div class="invalid-feedback"><?= htmlspecialchars($errors['DateIn'], ENT_QUOTES, 'UTF-8') ?></div>
+                            <?php endif; ?>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="DateOut" class="form-label">Дата смерти</label>
+                            <input type="date" class="form-control <?= isset($errors['DateOut']) ? 'is-invalid' : '' ?>"
+                                   id="DateOut" name="DateOut"
+                                   value="<?= htmlspecialchars($values['DateOut'], ENT_QUOTES, 'UTF-8') ?>">
+                            <?php if (isset($errors['DateOut'])): ?>
+                            <div class="invalid-feedback"><?= htmlspecialchars($errors['DateOut'], ENT_QUOTES, 'UTF-8') ?></div>
+                            <?php endif; ?>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Пол</label>
+                            <div class="gender-btn-group">
+                                <input type="radio" class="btn-check" name="gender" id="gender-m" value="m"
+                                       <?= $values['gender'] === 'm' ? 'checked' : '' ?>>
+                                <label class="btn btn-outline-secondary btn-sm" for="gender-m">Мужской</label>
+                                <input type="radio" class="btn-check" name="gender" id="gender-f" value="f"
+                                       <?= $values['gender'] === 'f' ? 'checked' : '' ?>>
+                                <label class="btn btn-outline-secondary btn-sm" for="gender-f">Женский</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-6">
+                            <label for="TownIn" class="form-label">Город рождения</label>
+                            <input type="text" class="form-control" id="TownIn" name="TownIn"
+                                   value="<?= htmlspecialchars($values['TownIn'], ENT_QUOTES, 'UTF-8') ?>"
+                                   placeholder="Москва">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="cc2born" class="form-label">Страна рожд.</label>
+                            <input type="text" class="form-control cc2-input <?= isset($errors['cc2born']) ? 'is-invalid' : '' ?>"
+                                   id="cc2born" name="cc2born" maxlength="2"
+                                   value="<?= htmlspecialchars($values['cc2born'], ENT_QUOTES, 'UTF-8') ?>"
+                                   placeholder="RU">
+                            <?php if (isset($errors['cc2born'])): ?>
+                            <div class="invalid-feedback"><?= htmlspecialchars($errors['cc2born'], ENT_QUOTES, 'UTF-8') ?></div>
+                            <?php endif; ?>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="cc2dead" class="form-label">Страна смерти</label>
+                            <input type="text" class="form-control cc2-input <?= isset($errors['cc2dead']) ? 'is-invalid' : '' ?>"
+                                   id="cc2dead" name="cc2dead" maxlength="2"
+                                   value="<?= htmlspecialchars($values['cc2dead'], ENT_QUOTES, 'UTF-8') ?>"
+                                   placeholder="RU">
+                            <?php if (isset($errors['cc2dead'])): ?>
+                            <div class="invalid-feedback"><?= htmlspecialchars($errors['cc2dead'], ENT_QUOTES, 'UTF-8') ?></div>
+                            <?php endif; ?>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="cc2" class="form-label">Страна (осн.)</label>
+                            <input type="text" class="form-control cc2-input <?= isset($errors['cc2']) ? 'is-invalid' : '' ?>"
+                                   id="cc2" name="cc2" maxlength="2"
+                                   value="<?= htmlspecialchars($values['cc2'], ENT_QUOTES, 'UTF-8') ?>"
+                                   placeholder="RU">
+                            <?php if (isset($errors['cc2'])): ?>
+                            <div class="invalid-feedback"><?= htmlspecialchars($errors['cc2'], ENT_QUOTES, 'UTF-8') ?></div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
             </div>
 
+            <!-- Biography -->
             <div class="mb-3">
-                <label for="description" class="form-label">Кто этот человек <span class="text-danger">*</span></label>
+                <label for="description" class="form-label">Биография <span class="text-danger">*</span></label>
                 <textarea class="form-control <?= isset($errors['description']) ? 'is-invalid' : '' ?>"
-                          id="description" name="description" rows="4"
-                          placeholder="Кратко опишите, чем известен этот человек..."><?= htmlspecialchars($values['description'], ENT_QUOTES, 'UTF-8') ?></textarea>
+                          id="description" name="description" rows="6"
+                          placeholder="Напишите биографию персоны (минимум 50 символов)..."><?= htmlspecialchars($values['description'], ENT_QUOTES, 'UTF-8') ?></textarea>
                 <?php if (isset($errors['description'])): ?>
                 <div class="invalid-feedback"><?= htmlspecialchars($errors['description'], ENT_QUOTES, 'UTF-8') ?></div>
                 <?php endif; ?>
+                <div class="form-text">Минимум 50 символов. Опишите, чем известен этот человек.</div>
             </div>
 
+            <!-- Source URL -->
             <div class="mb-3">
                 <label for="source_url" class="form-label">Ссылка на источник (Википедия и т.п.)</label>
                 <input type="url" class="form-control" id="source_url" name="source_url"
@@ -138,7 +281,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        placeholder="https://ru.wikipedia.org/wiki/...">
             </div>
 
-            <button type="submit" class="btn btn-primary">Отправить на рассмотрение</button>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-send me-1"></i>Отправить на рассмотрение
+            </button>
             <a href="/user/" class="btn btn-outline-secondary ms-2">Отмена</a>
         </form>
         <?php endif; ?>
@@ -150,8 +295,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <h6 class="card-title"><i class="bi bi-info-circle me-1"></i>Подсказки</h6>
                 <ul class="small text-muted mb-0" style="padding-left:1.1rem">
                     <li>Убедитесь, что персоны нет в базе (попробуйте разные варианты написания)</li>
-                    <li>Укажите полное имя и фамилию</li>
-                    <li>Напишите, чем известен этот человек</li>
+                    <li>Укажите фамилию и имя на русском — обязательно</li>
+                    <li>Английское написание поможет при поиске</li>
+                    <li>Коды стран — 2 латинские буквы (RU, US, GB, DE и т.п.)</li>
+                    <li>Напишите биографию минимум 50 символов</li>
                     <li>По возможности укажите ссылку на Википедию</li>
                 </ul>
             </div>
