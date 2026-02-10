@@ -87,6 +87,11 @@ $currentPage = basename($_SERVER['SCRIPT_NAME']);
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link <?= $currentPage === 'newsletter.php' ? 'active' : '' ?>" href="/moderate/newsletter.php">
+                        <i class="bi bi-envelope me-1"></i>Рассылка
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link <?= $currentPage === 'log.php' ? 'active' : '' ?>" href="/moderate/log.php">
                         <i class="bi bi-journal-text me-1"></i>Журнал
                     </a>

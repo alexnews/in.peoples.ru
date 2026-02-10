@@ -30,6 +30,9 @@ $allowedOrigins = [
     'https://in.peoples.ru',
     'https://www.in.peoples.ru',
     'http://in.peoples.ru',
+    'https://peoples.ru',
+    'https://www.peoples.ru',
+    'http://peoples.ru',
     'http://localhost',
     'http://localhost:8080',
 ];
