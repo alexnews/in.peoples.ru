@@ -15,6 +15,7 @@ declare(strict_types=1);
 $pageTitle = 'Предложить персону';
 require_once __DIR__ . '/includes/header.php';
 require_once __DIR__ . '/../includes/upload.php';
+require_once __DIR__ . '/../includes/countries.php';
 
 $db = getDb();
 $userId = (int) $currentUser['id'];
@@ -69,14 +70,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($values['DateOut'] !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $values['DateOut'])) {
             $errors['DateOut'] = 'Формат: ГГГГ-ММ-ДД';
         }
-        if ($values['cc2born'] !== '' && !preg_match('/^[A-Za-z]{2}$/', $values['cc2born'])) {
-            $errors['cc2born'] = 'Код страны — 2 латинские буквы';
+        $validCountryCodes = array_keys(getCountries());
+        if ($values['cc2born'] !== '' && !in_array(strtoupper($values['cc2born']), $validCountryCodes, true)) {
+            $errors['cc2born'] = 'Выберите страну из списка';
         }
-        if ($values['cc2dead'] !== '' && !preg_match('/^[A-Za-z]{2}$/', $values['cc2dead'])) {
-            $errors['cc2dead'] = 'Код страны — 2 латинские буквы';
+        if ($values['cc2dead'] !== '' && !in_array(strtoupper($values['cc2dead']), $validCountryCodes, true)) {
+            $errors['cc2dead'] = 'Выберите страну из списка';
         }
-        if ($values['cc2'] !== '' && !preg_match('/^[A-Za-z]{2}$/', $values['cc2'])) {
-            $errors['cc2'] = 'Код страны — 2 латинские буквы';
+        if ($values['cc2'] !== '' && !in_array(strtoupper($values['cc2']), $validCountryCodes, true)) {
+            $errors['cc2'] = 'Выберите страну из списка';
         }
 
         // Handle photo uploads
@@ -225,13 +227,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </div>
 
-            <!-- Dates, gender, location -->
+            <!-- Gender -->
             <div class="card suggest-person-section mb-3">
-                <div class="card-header"><i class="bi bi-calendar-event me-1"></i>Даты и место</div>
+                <div class="card-header"><i class="bi bi-person-badge me-1"></i>Пол</div>
+                <div class="card-body">
+                    <div class="gender-btn-group">
+                        <input type="radio" class="btn-check" name="gender" id="gender-m" value="m"
+                               <?= $values['gender'] === 'm' ? 'checked' : '' ?>>
+                        <label class="btn btn-outline-secondary btn-sm" for="gender-m">Мужской</label>
+                        <input type="radio" class="btn-check" name="gender" id="gender-f" value="f"
+                               <?= $values['gender'] === 'f' ? 'checked' : '' ?>>
+                        <label class="btn btn-outline-secondary btn-sm" for="gender-f">Женский</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Birth -->
+            <div class="card suggest-person-section mb-3">
+                <div class="card-header"><i class="bi bi-calendar-event me-1"></i>Рождение</div>
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label for="DateIn" class="form-label">Дата рождения</label>
+                            <label for="DateIn" class="form-label">Дата (ДД.ММ.ГГГГ)</label>
                             <input type="date" class="form-control <?= isset($errors['DateIn']) ? 'is-invalid' : '' ?>"
                                    id="DateIn" name="DateIn"
                                    value="<?= htmlspecialchars($values['DateIn'], ENT_QUOTES, 'UTF-8') ?>">
@@ -240,7 +257,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <?php endif; ?>
                         </div>
                         <div class="col-md-4">
-                            <label for="DateOut" class="form-label">Дата смерти</label>
+                            <label for="TownIn" class="form-label">Город</label>
+                            <input type="text" class="form-control" id="TownIn" name="TownIn"
+                                   value="<?= htmlspecialchars($values['TownIn'], ENT_QUOTES, 'UTF-8') ?>"
+                                   placeholder="Москва">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="cc2born" class="form-label">Страна</label>
+                            <?= countrySelect('cc2born', 'cc2born', $values['cc2born'], '', isset($errors['cc2born'])) ?>
+                            <?php if (isset($errors['cc2born'])): ?>
+                            <div class="invalid-feedback"><?= htmlspecialchars($errors['cc2born'], ENT_QUOTES, 'UTF-8') ?></div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Death -->
+            <div class="card suggest-person-section mb-3">
+                <div class="card-header"><i class="bi bi-calendar-x me-1"></i>Смерть</div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="DateOut" class="form-label">Дата (ДД.ММ.ГГГГ)</label>
                             <input type="date" class="form-control <?= isset($errors['DateOut']) ? 'is-invalid' : '' ?>"
                                    id="DateOut" name="DateOut"
                                    value="<?= htmlspecialchars($values['DateOut'], ENT_QUOTES, 'UTF-8') ?>">
@@ -248,51 +287,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="invalid-feedback"><?= htmlspecialchars($errors['DateOut'], ENT_QUOTES, 'UTF-8') ?></div>
                             <?php endif; ?>
                         </div>
+                        <div class="col-md-4"></div>
                         <div class="col-md-4">
-                            <label class="form-label">Пол</label>
-                            <div class="gender-btn-group">
-                                <input type="radio" class="btn-check" name="gender" id="gender-m" value="m"
-                                       <?= $values['gender'] === 'm' ? 'checked' : '' ?>>
-                                <label class="btn btn-outline-secondary btn-sm" for="gender-m">Мужской</label>
-                                <input type="radio" class="btn-check" name="gender" id="gender-f" value="f"
-                                       <?= $values['gender'] === 'f' ? 'checked' : '' ?>>
-                                <label class="btn btn-outline-secondary btn-sm" for="gender-f">Женский</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row g-3 mt-1">
-                        <div class="col-md-6">
-                            <label for="TownIn" class="form-label">Город рождения</label>
-                            <input type="text" class="form-control" id="TownIn" name="TownIn"
-                                   value="<?= htmlspecialchars($values['TownIn'], ENT_QUOTES, 'UTF-8') ?>"
-                                   placeholder="Москва">
-                        </div>
-                        <div class="col-md-2">
-                            <label for="cc2born" class="form-label">Страна рожд.</label>
-                            <input type="text" class="form-control cc2-input <?= isset($errors['cc2born']) ? 'is-invalid' : '' ?>"
-                                   id="cc2born" name="cc2born" maxlength="2"
-                                   value="<?= htmlspecialchars($values['cc2born'], ENT_QUOTES, 'UTF-8') ?>"
-                                   placeholder="RU">
-                            <?php if (isset($errors['cc2born'])): ?>
-                            <div class="invalid-feedback"><?= htmlspecialchars($errors['cc2born'], ENT_QUOTES, 'UTF-8') ?></div>
-                            <?php endif; ?>
-                        </div>
-                        <div class="col-md-2">
-                            <label for="cc2dead" class="form-label">Страна смерти</label>
-                            <input type="text" class="form-control cc2-input <?= isset($errors['cc2dead']) ? 'is-invalid' : '' ?>"
-                                   id="cc2dead" name="cc2dead" maxlength="2"
-                                   value="<?= htmlspecialchars($values['cc2dead'], ENT_QUOTES, 'UTF-8') ?>"
-                                   placeholder="RU">
+                            <label for="cc2dead" class="form-label">Страна</label>
+                            <?= countrySelect('cc2dead', 'cc2dead', $values['cc2dead'], '', isset($errors['cc2dead'])) ?>
                             <?php if (isset($errors['cc2dead'])): ?>
                             <div class="invalid-feedback"><?= htmlspecialchars($errors['cc2dead'], ENT_QUOTES, 'UTF-8') ?></div>
                             <?php endif; ?>
                         </div>
-                        <div class="col-md-2">
-                            <label for="cc2" class="form-label">Страна (осн.)</label>
-                            <input type="text" class="form-control cc2-input <?= isset($errors['cc2']) ? 'is-invalid' : '' ?>"
-                                   id="cc2" name="cc2" maxlength="2"
-                                   value="<?= htmlspecialchars($values['cc2'], ENT_QUOTES, 'UTF-8') ?>"
-                                   placeholder="RU">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Residence / Citizenship -->
+            <div class="card suggest-person-section mb-3">
+                <div class="card-header"><i class="bi bi-globe me-1"></i>Гражданство / страна проживания</div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="cc2" class="form-label">Страна</label>
+                            <?= countrySelect('cc2', 'cc2', $values['cc2'], '', isset($errors['cc2'])) ?>
                             <?php if (isset($errors['cc2'])): ?>
                             <div class="invalid-feedback"><?= htmlspecialchars($errors['cc2'], ENT_QUOTES, 'UTF-8') ?></div>
                             <?php endif; ?>
@@ -385,7 +399,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <li>Убедитесь, что персоны нет в базе (попробуйте разные варианты написания)</li>
                     <li>Укажите фамилию и имя на русском — обязательно</li>
                     <li>Английское написание поможет при поиске</li>
-                    <li>Коды стран — 2 латинские буквы (RU, US, GB, DE и т.п.)</li>
+                    <li>Выберите страну из списка (бывший СССР — вверху)</li>
                     <li>Загрузите портрет персоны (если есть)</li>
                     <li>Звание — кто это: «Актёр, режиссёр», «Учёный-физик»</li>
                     <li>Эпиграф — краткое описание статьи</li>
