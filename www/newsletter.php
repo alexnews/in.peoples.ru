@@ -90,6 +90,9 @@ if (!$prefillEmail && isset($_GET['email'])) {
                     <!-- Bot token — set by JS after delay -->
                     <input type="hidden" name="bot_token" id="bot_token" value="">
 
+                    <!-- Manage token — set when editing existing subscription -->
+                    <input type="hidden" name="manage_token" id="manage_token" value="<?= htmlspecialchars($token, ENT_QUOTES, 'UTF-8') ?>">
+
                     <div class="mb-3">
                         <label for="email" class="form-label">Email-адрес</label>
                         <input type="email" class="form-control" id="email" name="email"
@@ -203,7 +206,8 @@ document.getElementById('newsletter-form').addEventListener('submit', function(e
             sections: sections,
             frequency: frequency,
             website: document.getElementById('website').value,
-            bot_token: document.getElementById('bot_token').value
+            bot_token: document.getElementById('bot_token').value,
+            manage_token: document.getElementById('manage_token').value
         })
     })
     .then(function(res) { return res.json(); })

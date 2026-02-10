@@ -40,20 +40,32 @@ if (is_file($rateLimitFile)) {
 }
 file_put_contents($rateLimitFile, json_encode($rateData));
 
-// --- Bot protection: honeypot + time-based token ---
-$honeypot = trim((string) getInput('website', ''));
-if ($honeypot !== '') {
-    jsonError('Ошибка отправки формы.', 'BOT_DETECTED', 400);
+// --- Check for manage token (skip bot protection if valid) ---
+$manageToken = trim((string) getInput('manage_token', ''));
+$isManage = false;
+if ($manageToken !== '' && preg_match('/^[0-9a-f]{64}$/', $manageToken)) {
+    $db = getDb();
+    $mStmt = $db->prepare('SELECT id FROM user_newsletter_subscribers WHERE unsubscribe_token = :token AND status != :unsub');
+    $mStmt->execute([':token' => $manageToken, ':unsub' => 'unsubscribed']);
+    $isManage = (bool) $mStmt->fetch();
 }
 
-$botToken = trim((string) getInput('bot_token', ''));
-if ($botToken === '' || !preg_match('/^ok_\d{10,13}$/', $botToken)) {
-    jsonError('Подтвердите, что вы не робот.', 'BOT_DETECTED', 400);
-}
-$tokenTime = (int) substr($botToken, 3);
-$nowMs = (int) (microtime(true) * 1000);
-if (($nowMs - $tokenTime) < 60000 || ($nowMs - $tokenTime) > 600000) {
-    jsonError('Подтвердите, что вы не робот.', 'BOT_DETECTED', 400);
+// --- Bot protection: honeypot + time-based token (skip for valid manage token) ---
+if (!$isManage) {
+    $honeypot = trim((string) getInput('website', ''));
+    if ($honeypot !== '') {
+        jsonError('Ошибка отправки формы.', 'BOT_DETECTED', 400);
+    }
+
+    $botToken = trim((string) getInput('bot_token', ''));
+    if ($botToken === '' || !preg_match('/^ok_\d{10,13}$/', $botToken)) {
+        jsonError('Подтвердите, что вы не робот.', 'BOT_DETECTED', 400);
+    }
+    $tokenTime = (int) substr($botToken, 3);
+    $nowMs = (int) (microtime(true) * 1000);
+    if (($nowMs - $tokenTime) < 60000 || ($nowMs - $tokenTime) > 600000) {
+        jsonError('Подтвердите, что вы не робот.', 'BOT_DETECTED', 400);
+    }
 }
 
 // --- Allowed newsletter sections ---
