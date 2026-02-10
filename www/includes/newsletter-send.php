@@ -183,7 +183,7 @@ foreach ($subscribers as $sub) {
     <hr style="margin-top: 30px; border: none; border-top: 1px solid #ddd;">
     <p style="font-size: 12px; color: #888; line-height: 1.5;">
         Вы получаете это письмо, потому что подписались на рассылку peoples.ru<br>
-        <a href="{$siteUrl}/newsletter.php" style="color: #888;">Настроить подписку</a> &nbsp;|&nbsp;
+        <a href="{$siteUrl}/newsletter.php?token={$unsubToken}" style="color: #888;">Настроить подписку</a> &nbsp;|&nbsp;
         <a href="{$unsubUrl}" style="color: #888;">Отписаться</a>
     </p>
 </body>

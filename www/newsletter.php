@@ -10,9 +10,39 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/includes/db.php';
+require_once __DIR__ . '/includes/encoding.php';
+
 header('Content-Type: text/html; charset=UTF-8');
 
-$prefillEmail = isset($_GET['email']) ? htmlspecialchars(trim($_GET['email']), ENT_QUOTES, 'UTF-8') : '';
+$prefillEmail = '';
+$prefillSections = [];
+$prefillFrequency = 'weekly';
+$isManage = false;
+
+// If token provided — look up existing subscriber
+$token = trim($_GET['token'] ?? '');
+if ($token !== '' && preg_match('/^[0-9a-f]{64}$/', $token)) {
+    $db = getDb();
+    $stmt = $db->prepare('SELECT id, email, frequency, status FROM user_newsletter_subscribers WHERE unsubscribe_token = :token');
+    $stmt->execute([':token' => $token]);
+    $subscriber = $stmt->fetch();
+
+    if ($subscriber && $subscriber['status'] !== 'unsubscribed') {
+        $isManage = true;
+        $prefillEmail = htmlspecialchars(fromDb($subscriber['email']) ?? '', ENT_QUOTES, 'UTF-8');
+        $prefillFrequency = $subscriber['frequency'];
+
+        $secStmt = $db->prepare('SELECT section_id FROM user_newsletter_sections WHERE subscriber_id = :sid');
+        $secStmt->execute([':sid' => $subscriber['id']]);
+        $prefillSections = $secStmt->fetchAll(PDO::FETCH_COLUMN);
+    }
+}
+
+// Fallback: email from query param (from peoples.ru footer redirect)
+if (!$prefillEmail && isset($_GET['email'])) {
+    $prefillEmail = htmlspecialchars(trim($_GET['email']), ENT_QUOTES, 'UTF-8');
+}
 ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -42,9 +72,9 @@ $prefillEmail = isset($_GET['email']) ? htmlspecialchars(trim($_GET['email']), E
             <div class="card-body p-4">
                 <div class="text-center mb-4">
                     <h3 class="brand-color mb-1">peoples.ru</h3>
-                    <h5 class="mb-2">Подписка на рассылку</h5>
+                    <h5 class="mb-2"><?= $isManage ? 'Настройка подписки' : 'Подписка на рассылку' ?></h5>
                     <p class="text-muted small mb-0">
-                        Получайте свежие новости и материалы peoples.ru на вашу почту
+                        <?= $isManage ? 'Измените разделы или частоту рассылки' : 'Получайте свежие новости и материалы peoples.ru на вашу почту' ?>
                     </p>
                 </div>
 
@@ -64,45 +94,34 @@ $prefillEmail = isset($_GET['email']) ? htmlspecialchars(trim($_GET['email']), E
                         <label for="email" class="form-label">Email-адрес</label>
                         <input type="email" class="form-control" id="email" name="email"
                                placeholder="you@example.com" required
-                               value="<?= $prefillEmail ?>">
+                               value="<?= $prefillEmail ?>"<?= $isManage ? ' readonly' : '' ?>>
                         <div class="invalid-feedback" id="email-error"></div>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Разделы</label>
                         <div class="section-grid">
+                            <?php
+                            $sections = [
+                                4  => 'Новости',
+                                2  => 'Истории',
+                                8  => 'Мир фактов',
+                                7  => 'Песни',
+                                19 => 'Стихи',
+                                29 => 'Цитаты',
+                                31 => 'Анекдоты',
+                                13 => 'Интересное',
+                            ];
+                            foreach ($sections as $secId => $secName):
+                                $checked = $isManage
+                                    ? (in_array($secId, $prefillSections) ? 'checked' : '')
+                                    : ($secId === 4 ? 'checked' : '');
+                            ?>
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="sections[]" value="4" id="sec-4" checked>
-                                <label class="form-check-label" for="sec-4">Новости</label>
+                                <input class="form-check-input" type="checkbox" name="sections[]" value="<?= $secId ?>" id="sec-<?= $secId ?>" <?= $checked ?>>
+                                <label class="form-check-label" for="sec-<?= $secId ?>"><?= htmlspecialchars($secName, ENT_QUOTES, 'UTF-8') ?></label>
                             </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="sections[]" value="2" id="sec-2">
-                                <label class="form-check-label" for="sec-2">Истории</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="sections[]" value="8" id="sec-8">
-                                <label class="form-check-label" for="sec-8">Мир фактов</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="sections[]" value="7" id="sec-7">
-                                <label class="form-check-label" for="sec-7">Песни</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="sections[]" value="19" id="sec-19">
-                                <label class="form-check-label" for="sec-19">Стихи</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="sections[]" value="29" id="sec-29">
-                                <label class="form-check-label" for="sec-29">Цитаты</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="sections[]" value="31" id="sec-31">
-                                <label class="form-check-label" for="sec-31">Анекдоты</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="sections[]" value="13" id="sec-13">
-                                <label class="form-check-label" for="sec-13">Интересное</label>
-                            </div>
+                            <?php endforeach; ?>
                         </div>
                         <div class="invalid-feedback d-block" id="sections-error" style="display:none!important;"></div>
                     </div>
@@ -111,18 +130,18 @@ $prefillEmail = isset($_GET['email']) ? htmlspecialchars(trim($_GET['email']), E
                         <label class="form-label">Частота</label>
                         <div class="d-flex gap-3">
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="frequency" value="weekly" id="freq-weekly" checked>
+                                <input class="form-check-input" type="radio" name="frequency" value="weekly" id="freq-weekly" <?= $prefillFrequency === 'weekly' ? 'checked' : '' ?>>
                                 <label class="form-check-label" for="freq-weekly">Раз в неделю</label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="frequency" value="daily" id="freq-daily">
+                                <input class="form-check-input" type="radio" name="frequency" value="daily" id="freq-daily" <?= $prefillFrequency === 'daily' ? 'checked' : '' ?>>
                                 <label class="form-check-label" for="freq-daily">Каждый день</label>
                             </div>
                         </div>
                     </div>
 
                     <button type="submit" class="btn btn-brand w-100" id="btn-subscribe">
-                        <i class="bi bi-envelope-check me-1"></i>Подписаться
+                        <i class="bi bi-envelope-check me-1"></i><?= $isManage ? 'Сохранить' : 'Подписаться' ?>
                     </button>
                 </form>
             </div>
