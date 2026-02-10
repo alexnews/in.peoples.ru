@@ -183,6 +183,7 @@ foreach ($subscribers as $sub) {
     <hr style="margin-top: 30px; border: none; border-top: 1px solid #ddd;">
     <p style="font-size: 12px; color: #888; line-height: 1.5;">
         Вы получаете это письмо, потому что подписались на рассылку peoples.ru<br>
+        <a href="{$siteUrl}/newsletter.php" style="color: #888;">Настроить подписку</a> &nbsp;|&nbsp;
         <a href="{$unsubUrl}" style="color: #888;">Отписаться</a>
     </p>
 </body>
@@ -221,13 +222,10 @@ function renderNews(array $items): string
         $title = htmlspecialchars(fromDb($item['title'] ?? '') ?? '', ENT_QUOTES, 'UTF-8');
         $desc  = htmlspecialchars(mb_substr(fromDb($item['description'] ?? '') ?? '', 0, 120, 'UTF-8'), ENT_QUOTES, 'UTF-8');
         $path  = htmlspecialchars($item['path'] ?? '', ENT_QUOTES, 'UTF-8');
-        if ($path && !str_starts_with($path, '/') && !str_starts_with($path, 'http')) {
-            $path = '/' . $path;
-        }
-        $url   = $path ? "https://peoples.ru{$path}" : '#';
+        $url   = $path ? "https://www.peoples.ru/news/{$path}" : '#';
         $html .= "<li style=\"margin-bottom:8px;\"><a href=\"{$url}\" style=\"color:#d92228;text-decoration:none;\">{$title}</a>";
-        if ($desc) {
-            $html .= " — <span style=\"color:#666;\">{$desc}...</span>";
+        if ($desc && $desc !== $title) {
+            $html .= " — <span style=\"color:#666;\">{$desc}</span>";
         }
         $html .= '</li>';
     }
