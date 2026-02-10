@@ -135,10 +135,8 @@ $prefillEmail = isset($_GET['email']) ? htmlspecialchars(trim($_GET['email']), E
 </div>
 
 <script>
-// Set bot token after 1 second (bots submit instantly)
-setTimeout(function() {
-    document.getElementById('bot_token').value = 'ok_' + Date.now();
-}, 1000);
+// Set bot token on page load — server checks that at least 1s passed before submit
+document.getElementById('bot_token').value = 'ok_' + Date.now();
 
 document.getElementById('newsletter-form').addEventListener('submit', function(e) {
     e.preventDefault();

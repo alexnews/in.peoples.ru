@@ -29,5 +29,5 @@ function sendMail(string $to, string $subject, string $htmlBody): bool
         'X-Mailer: peoples.ru',
     ]);
 
-    return mail($to, $subject, $htmlBody, $headers);
+    return mail($to, $subject, $htmlBody, $headers, '-f ' . $from);
 }
