@@ -183,16 +183,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label for="SurNameRus" class="form-label">Фамилия <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control <?= isset($errors['SurNameRus']) ? 'is-invalid' : '' ?>"
-                                   id="SurNameRus" name="SurNameRus"
-                                   value="<?= htmlspecialchars($values['SurNameRus'], ENT_QUOTES, 'UTF-8') ?>"
-                                   placeholder="Иванов" required>
-                            <?php if (isset($errors['SurNameRus'])): ?>
-                            <div class="invalid-feedback"><?= htmlspecialchars($errors['SurNameRus'], ENT_QUOTES, 'UTF-8') ?></div>
-                            <?php endif; ?>
-                        </div>
-                        <div class="col-md-6">
                             <label for="NameRus" class="form-label">Имя <span class="text-danger">*</span></label>
                             <input type="text" class="form-control <?= isset($errors['NameRus']) ? 'is-invalid' : '' ?>"
                                    id="NameRus" name="NameRus"
@@ -200,6 +190,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                    placeholder="Иван" required>
                             <?php if (isset($errors['NameRus'])): ?>
                             <div class="invalid-feedback"><?= htmlspecialchars($errors['NameRus'], ENT_QUOTES, 'UTF-8') ?></div>
+                            <?php endif; ?>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="SurNameRus" class="form-label">Фамилия <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control <?= isset($errors['SurNameRus']) ? 'is-invalid' : '' ?>"
+                                   id="SurNameRus" name="SurNameRus"
+                                   value="<?= htmlspecialchars($values['SurNameRus'], ENT_QUOTES, 'UTF-8') ?>"
+                                   placeholder="Иванов" required>
+                            <?php if (isset($errors['SurNameRus'])): ?>
+                            <div class="invalid-feedback"><?= htmlspecialchars($errors['SurNameRus'], ENT_QUOTES, 'UTF-8') ?></div>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -212,16 +212,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label for="SurNameEngl" class="form-label">Фамилия (англ.)</label>
-                            <input type="text" class="form-control" id="SurNameEngl" name="SurNameEngl"
-                                   value="<?= htmlspecialchars($values['SurNameEngl'], ENT_QUOTES, 'UTF-8') ?>"
-                                   placeholder="Ivanov">
-                        </div>
-                        <div class="col-md-6">
                             <label for="NameEngl" class="form-label">Имя (англ.)</label>
                             <input type="text" class="form-control" id="NameEngl" name="NameEngl"
                                    value="<?= htmlspecialchars($values['NameEngl'], ENT_QUOTES, 'UTF-8') ?>"
                                    placeholder="Ivan">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="SurNameEngl" class="form-label">Фамилия (англ.)</label>
+                            <input type="text" class="form-control" id="SurNameEngl" name="SurNameEngl"
+                                   value="<?= htmlspecialchars($values['SurNameEngl'], ENT_QUOTES, 'UTF-8') ?>"
+                                   placeholder="Ivanov">
                         </div>
                     </div>
                 </div>
