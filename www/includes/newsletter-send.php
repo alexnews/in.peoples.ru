@@ -190,15 +190,21 @@ HTML;
 
     if (sendMail($email, $subject, $html)) {
         $sent++;
+        // Reset bounce count on success
+        if (!$testMode) {
+            $updStmt = $db->prepare('UPDATE user_newsletter_subscribers SET last_sent_at = NOW(), bounce_count = 0 WHERE id = :id');
+            $updStmt->execute([':id' => $subscriberId]);
+        }
     } else {
         $errors++;
         error_log("Newsletter: failed to send to {$email}");
-    }
-
-    // Update last_sent_at (skip in test mode)
-    if (!$testMode) {
-        $updStmt = $db->prepare('UPDATE user_newsletter_subscribers SET last_sent_at = NOW() WHERE id = :id');
-        $updStmt->execute([':id' => $subscriberId]);
+        // Increment bounce count, pause after 3 consecutive failures
+        if (!$testMode) {
+            $db->prepare('UPDATE user_newsletter_subscribers SET bounce_count = bounce_count + 1 WHERE id = :id')
+               ->execute([':id' => $subscriberId]);
+            $db->prepare("UPDATE user_newsletter_subscribers SET status = 'paused' WHERE id = :id AND bounce_count >= 3")
+               ->execute([':id' => $subscriberId]);
+        }
     }
 }
 
