@@ -190,7 +190,9 @@ foreach ($subscribers as $sub) {
 </html>
 HTML;
 
-    $subject = 'Peoples.ru — ' . (($frequency === 'daily') ? 'Дайджест за день' : 'Еженедельный дайджест');
+    $ruMonths = [1=>'января',2=>'февраля',3=>'марта',4=>'апреля',5=>'мая',6=>'июня',7=>'июля',8=>'августа',9=>'сентября',10=>'октября',11=>'ноября',12=>'декабря'];
+    $ruDate = (int)date('j') . ' ' . $ruMonths[(int)date('n')] . ' ' . date('Y') . ' года';
+    $subject = "Peoples.ru — Дайджест за {$ruDate}";
 
     if (sendMail($email, $subject, $html)) {
         $sent++;
