@@ -15,11 +15,13 @@ declare(strict_types=1);
  * - user_person_suggestions: read data, update status to 'published'
  * - persons: INSERT new person (approve='YES' — fully moderated at this point)
  * - histories: INSERT biography linked to new Persons_id
+ * - photo: INSERT article photo linked to new Persons_id
  * - users: reputation update (+10 for published person)
  * - users_moderation_log: audit trail
  */
 
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../../../includes/upload.php';
 
 requireMethod('POST');
 
@@ -174,6 +176,43 @@ try {
     ]);
 
     $newPersonId = (int) $db->lastInsertId();
+
+    // Move person photo from temp to production
+    if (!empty($suggestion['person_photo_path'])) {
+        try {
+            $prodPhotoPath = moveToProduction($suggestion['person_photo_path'], $newPersonId);
+            $movedFilename = basename($prodPhotoPath);
+            // Update persons.NamePhoto with the production filename
+            $photoUpdateStmt = $db->prepare(
+                'UPDATE persons SET NamePhoto = :photo WHERE Persons_id = :id'
+            );
+            $photoUpdateStmt->execute([
+                ':photo' => toDb($movedFilename),
+                ':id'    => $newPersonId,
+            ]);
+        } catch (\RuntimeException $e) {
+            // Photo move failed — not critical, person is still created
+        }
+    }
+
+    // Move article photo and insert into photo table
+    if (!empty($suggestion['photo_path'])) {
+        $articleProdPath = $suggestion['photo_path'];
+        try {
+            $articleProdPath = moveToProduction($suggestion['photo_path'], $newPersonId);
+        } catch (\RuntimeException $e) {
+            // Keep temp path if move fails
+        }
+        $photoStmt = $db->prepare(
+            'INSERT INTO photo (KodPersons, NamePhoto, path_photo, date_registration)
+             VALUES (:kod, :name_photo, :path_photo, NOW())'
+        );
+        $photoStmt->execute([
+            ':kod'        => $newPersonId,
+            ':name_photo' => basename($articleProdPath),
+            ':path_photo' => dirname($articleProdPath),
+        ]);
+    }
 
     // Convert markdown biography to HTML before saving
     $biographyHtml = markdownToHtml($biography);
