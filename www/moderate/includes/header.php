@@ -31,6 +31,10 @@ $pendingCount = (int) $badgeStmt->fetchColumn();
 $personBadgeStmt = $db->query("SELECT COUNT(*) FROM user_person_suggestions WHERE status = 'pending'");
 $pendingPersonCount = (int) $personBadgeStmt->fetchColumn();
 
+// New booking requests count
+$bookingBadgeStmt = $db->query("SELECT COUNT(*) FROM booking_requests WHERE status = 'new'");
+$newBookingCount = (int) $bookingBadgeStmt->fetchColumn();
+
 $pageTitle = $pageTitle ?? 'Модерация';
 $currentPage = basename($_SERVER['SCRIPT_NAME']);
 ?>
@@ -89,6 +93,14 @@ $currentPage = basename($_SERVER['SCRIPT_NAME']);
                 <li class="nav-item">
                     <a class="nav-link <?= $currentPage === 'newsletter.php' ? 'active' : '' ?>" href="/moderate/newsletter.php">
                         <i class="bi bi-envelope me-1"></i>Рассылка
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= in_array($currentPage, ['booking.php', 'booking-persons.php', 'booking-categories.php']) ? 'active' : '' ?>" href="/moderate/booking.php">
+                        <i class="bi bi-calendar-event me-1"></i>Букинг
+                        <?php if ($newBookingCount > 0): ?>
+                            <span class="badge bg-danger ms-1 pending-badge"><?= $newBookingCount ?></span>
+                        <?php endif; ?>
                     </a>
                 </li>
                 <li class="nav-item">

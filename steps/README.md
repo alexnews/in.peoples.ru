@@ -30,6 +30,7 @@ A community portal at **in.peoples.ru** where users register, submit content (bi
 | 08 | [photo-upload.md](08-photo-upload.md) | Upload pipeline, image processing, security |
 | 09 | [implementation-order.md](09-implementation-order.md) | Phase-by-phase plan, agent prompts, checkpoints |
 | 10 | [testing-strategy.md](10-testing-strategy.md) | Test structure, categories, test cases |
+| 11 | [booking-feature.md](11-booking-feature.md) | Celebrity booking system (lead generation) |
 
 ## Build Phases (5 Agents)
 

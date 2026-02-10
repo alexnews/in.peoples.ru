@@ -1,4 +1,4 @@
-# Database Schema: New Tables (5 tables)
+# Database Schema: New Tables (9 tables)
 
 All new tables live in the existing `peoplesru` database.
 All use `CHARACTER SET cp1251 COLLATE cp1251_general_ci` to match existing schema.
@@ -189,7 +189,15 @@ SOURCE/MIGRATIONS/
 ├── 004_rollback_moderation_log.sql
 ├── 005_seed_admin_user.sql
 ├── 006_add_person_data.sql          -- creates user_person_suggestions
-└── 006_rollback_person_data.sql
+├── 006_rollback_person_data.sql
+├── 010_create_booking_categories.sql   -- booking feature
+├── 010_rollback_booking_categories.sql
+├── 011_create_booking_persons.sql
+├── 011_rollback_booking_persons.sql
+├── 012_create_booking_requests.sql
+├── 012_rollback_booking_requests.sql
+├── 013_create_booking_request_status_log.sql
+└── 013_rollback_booking_request_status_log.sql
 ```
 
 ## Approval Logic Per Section
@@ -223,6 +231,89 @@ On admin push (`person-push.php`):
 3. UPDATE `user_person_suggestions.published_person_id` = new Persons_id
 4. UPDATE `users.reputation` += 10
 5. INSERT into `users_moderation_log`
+
+## 6. booking_categories (Booking Category Taxonomy)
+
+```sql
+CREATE TABLE booking_categories (
+    id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name            VARCHAR(100) NOT NULL,
+    slug            VARCHAR(100) NOT NULL,
+    description     VARCHAR(500) DEFAULT NULL,
+    icon            VARCHAR(50) DEFAULT NULL,          -- Bootstrap Icon class
+    sort_order      INT UNSIGNED NOT NULL DEFAULT 0,
+    is_active       TINYINT(1) NOT NULL DEFAULT 1,
+    created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE KEY idx_slug (slug)
+) ENGINE=InnoDB CHARACTER SET cp1251 COLLATE cp1251_general_ci;
+```
+
+Seeded with 8 categories: Ведущие, Певцы, Блогеры, Комики, DJ, Актёры, Спортсмены, Писатели.
+
+## 7. booking_persons (Person ↔ Category Linking)
+
+```sql
+CREATE TABLE booking_persons (
+    id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    person_id       INT NOT NULL,                      -- persons.Persons_id
+    category_id     INT UNSIGNED NOT NULL,             -- FK → booking_categories
+    price_from      INT UNSIGNED DEFAULT NULL,
+    price_to        INT UNSIGNED DEFAULT NULL,
+    description     TEXT DEFAULT NULL,
+    short_desc      VARCHAR(500) DEFAULT NULL,
+    is_active       TINYINT(1) NOT NULL DEFAULT 1,
+    is_featured     TINYINT(1) NOT NULL DEFAULT 0,
+    sort_order      INT UNSIGNED NOT NULL DEFAULT 0,
+    added_by        INT UNSIGNED DEFAULT NULL,         -- FK → users
+
+    UNIQUE KEY idx_person_category (person_id, category_id)
+) ENGINE=InnoDB CHARACTER SET cp1251 COLLATE cp1251_general_ci;
+```
+
+## 8. booking_requests (Customer Inquiries)
+
+```sql
+CREATE TABLE booking_requests (
+    id                  INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    person_id           INT DEFAULT NULL,
+    booking_person_id   INT UNSIGNED DEFAULT NULL,
+    client_name         VARCHAR(255) NOT NULL,
+    client_phone        VARCHAR(50) NOT NULL,
+    client_email        VARCHAR(255) DEFAULT NULL,
+    client_company      VARCHAR(255) DEFAULT NULL,
+    event_type          VARCHAR(100) DEFAULT NULL,
+    event_date          DATE DEFAULT NULL,
+    event_city          VARCHAR(255) DEFAULT NULL,
+    event_venue         VARCHAR(500) DEFAULT NULL,
+    guest_count         INT UNSIGNED DEFAULT NULL,
+    budget_from         INT UNSIGNED DEFAULT NULL,
+    budget_to           INT UNSIGNED DEFAULT NULL,
+    message             TEXT DEFAULT NULL,
+    status              ENUM('new','in_progress','contacted','completed','cancelled','spam') DEFAULT 'new',
+    admin_note          TEXT DEFAULT NULL,
+    assigned_to         INT UNSIGNED DEFAULT NULL,
+    ip_address          VARCHAR(45) DEFAULT NULL,
+    user_agent          VARCHAR(500) DEFAULT NULL
+) ENGINE=InnoDB CHARACTER SET cp1251 COLLATE cp1251_general_ci;
+```
+
+## 9. booking_request_status_log (Status Audit Trail)
+
+```sql
+CREATE TABLE booking_request_status_log (
+    id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    request_id      INT UNSIGNED NOT NULL,             -- FK → booking_requests
+    old_status      VARCHAR(20) DEFAULT NULL,
+    new_status      VARCHAR(20) NOT NULL,
+    note            TEXT DEFAULT NULL,
+    changed_by      INT UNSIGNED DEFAULT NULL,         -- FK → users
+    created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB CHARACTER SET cp1251 COLLATE cp1251_general_ci;
+```
+
+---
 
 ## Notes
 

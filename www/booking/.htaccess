@@ -1,0 +1,10 @@
+RewriteEngine On
+
+# /booking/ → index.php
+RewriteRule ^$ index.php [L]
+
+# /booking/category/{slug}/ → category.php?slug={slug}
+RewriteRule ^category/([a-z0-9-]+)/?$ category.php?slug=$1 [L,QSA]
+
+# /booking/person/{id}/ → person.php?id={id}
+RewriteRule ^person/(\d+)/?$ person.php?id=$1 [L,QSA]
