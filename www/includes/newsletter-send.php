@@ -35,8 +35,8 @@ $sectionDefs = [
     ],
     8  => [
         'name'       => 'Мир фактов',
-        'query'      => "SELECT content FROM Facts WHERE date_registration > :since ORDER BY date_registration DESC LIMIT 5",
-        'renderer'   => 'renderContent',
+        'query'      => "SELECT Facts_txt AS content, Title AS title FROM Facts WHERE date_registration > :since AND del='N' ORDER BY date_registration DESC LIMIT 5",
+        'renderer'   => 'renderTitleDesc',
     ],
     7  => [
         'name'       => 'Песни',
