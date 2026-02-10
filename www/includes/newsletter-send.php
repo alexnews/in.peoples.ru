@@ -55,8 +55,8 @@ $sectionDefs = [
     ],
     31 => [
         'name'       => 'Анекдоты',
-        'query'      => "SELECT Anek_txt AS content FROM Anekdot WHERE date_registration > :since AND del='N' ORDER BY date_registration DESC LIMIT 5",
-        'renderer'   => 'renderContent',
+        'query'      => "SELECT a.Anek_txt AS content, p.FullNameRus FROM Anekdot a JOIN persons p ON p.Persons_id=a.KodPersons WHERE a.date_registration > :since AND a.del='N' AND a.KodPersons > 0 ORDER BY a.date_registration DESC LIMIT 5",
+        'renderer'   => 'renderWithPerson',
     ],
     13 => [
         'name'       => 'Интересное',

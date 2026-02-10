@@ -114,6 +114,21 @@ $existing = $stmt->fetch();
 
 if ($existing) {
     if ($existing['status'] === 'confirmed') {
+        if ($isManage) {
+            // Update sections and frequency for existing confirmed subscriber
+            $db->prepare('UPDATE user_newsletter_subscribers SET frequency = :freq WHERE id = :id')
+               ->execute([':freq' => $frequency, ':id' => $existing['id']]);
+
+            $db->prepare('DELETE FROM user_newsletter_sections WHERE subscriber_id = :sid')
+               ->execute([':sid' => $existing['id']]);
+
+            $insertSec = $db->prepare('INSERT INTO user_newsletter_sections (subscriber_id, section_id) VALUES (:sid, :secid)');
+            foreach ($sectionIds as $secId) {
+                $insertSec->execute([':sid' => $existing['id'], ':secid' => $secId]);
+            }
+
+            jsonSuccess(['message' => 'Подписка обновлена.']);
+        }
         jsonError('Этот email уже подписан на рассылку.', 'ALREADY_SUBSCRIBED', 409);
     }
 
