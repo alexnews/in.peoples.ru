@@ -50,12 +50,12 @@ $sectionDefs = [
     ],
     29 => [
         'name'       => 'Цитаты',
-        'query'      => "SELECT content FROM peoples_data_stat_aphorism WHERE date_registration > :since ORDER BY date_registration DESC LIMIT 5",
+        'query'      => "SELECT aphorism AS content FROM aphorism WHERE date_registration > :since AND deleted='N' ORDER BY date_registration DESC LIMIT 5",
         'renderer'   => 'renderContent',
     ],
     31 => [
         'name'       => 'Анекдоты',
-        'query'      => "SELECT content FROM peoples_data_stat_anekdot WHERE date_registration > :since ORDER BY date_registration DESC LIMIT 5",
+        'query'      => "SELECT Anek_txt AS content FROM Anekdot WHERE date_registration > :since AND del='N' ORDER BY date_registration DESC LIMIT 5",
         'renderer'   => 'renderContent',
     ],
     13 => [
