@@ -52,7 +52,7 @@ if ($botToken === '' || !preg_match('/^ok_\d{10,13}$/', $botToken)) {
 }
 $tokenTime = (int) substr($botToken, 3);
 $nowMs = (int) (microtime(true) * 1000);
-if (($nowMs - $tokenTime) < 1000 || ($nowMs - $tokenTime) > 600000) {
+if (($nowMs - $tokenTime) < 60000 || ($nowMs - $tokenTime) > 600000) {
     jsonError('Подтвердите, что вы не робот.', 'BOT_DETECTED', 400);
 }
 
@@ -135,12 +135,12 @@ if ($existing) {
         }
 
         sendConfirmationEmail($email, $confirmToken);
-        jsonSuccess(['message' => 'Письмо с подтверждением отправлено на ' . $email]);
+        jsonSuccess(['message' => 'Письмо с подтверждением отправлено на ' . $email . '. Проверьте папку «Спам», если не видите письмо.']);
     }
 
     // status === 'pending' — resend confirmation
     sendConfirmationEmail($email, $existing['confirm_token']);
-    jsonSuccess(['message' => 'Письмо с подтверждением повторно отправлено на ' . $email]);
+    jsonSuccess(['message' => 'Письмо с подтверждением повторно отправлено на ' . $email . '. Проверьте папку «Спам», если не видите письмо.']);
 }
 
 // --- Create new subscriber ---
@@ -168,7 +168,7 @@ foreach ($sectionIds as $secId) {
 
 sendConfirmationEmail($email, $confirmToken);
 
-jsonSuccess(['message' => 'Письмо с подтверждением отправлено на ' . $email]);
+jsonSuccess(['message' => 'Письмо с подтверждением отправлено на ' . $email . '. Проверьте папку «Спам», если не видите письмо.']);
 
 // ---------------------------------------------------------------------------
 

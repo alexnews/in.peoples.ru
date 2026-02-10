@@ -65,23 +65,36 @@ $sectionDefs = [
     ],
 ];
 
+// --- Test mode: php newsletter-send.php --test ---
+$testMode = in_array('--test', $argv ?? [], true);
+
 // --- Select subscribers to send to ---
 $dayOfWeek = (int) date('N'); // 1=Monday
 $now = date('Y-m-d H:i:s');
 
-$sql = "
-    SELECT ns.id, ns.email, ns.frequency, ns.unsubscribe_token, ns.last_sent_at
-    FROM user_newsletter_subscribers ns
-    WHERE ns.status = 'confirmed'
-      AND (
-          (ns.frequency = 'daily'  AND (ns.last_sent_at IS NULL OR ns.last_sent_at < DATE_SUB(NOW(), INTERVAL 24 HOUR)))
-          OR
-          (ns.frequency = 'weekly' AND (ns.last_sent_at IS NULL OR ns.last_sent_at < DATE_SUB(NOW(), INTERVAL 7 DAY)) AND :dow = 1)
-      )
-";
-
-$stmt = $db->prepare($sql);
-$stmt->execute([':dow' => $dayOfWeek]);
+if ($testMode) {
+    // Test mode: send to all confirmed subscribers, ignore timing
+    $sql = "
+        SELECT ns.id, ns.email, ns.frequency, ns.unsubscribe_token, ns.last_sent_at
+        FROM user_newsletter_subscribers ns
+        WHERE ns.status = 'confirmed'
+    ";
+    $stmt = $db->prepare($sql);
+    $stmt->execute();
+} else {
+    $sql = "
+        SELECT ns.id, ns.email, ns.frequency, ns.unsubscribe_token, ns.last_sent_at
+        FROM user_newsletter_subscribers ns
+        WHERE ns.status = 'confirmed'
+          AND (
+              (ns.frequency = 'daily'  AND (ns.last_sent_at IS NULL OR ns.last_sent_at < DATE_SUB(NOW(), INTERVAL 24 HOUR)))
+              OR
+              (ns.frequency = 'weekly' AND (ns.last_sent_at IS NULL OR ns.last_sent_at < DATE_SUB(NOW(), INTERVAL 7 DAY)) AND :dow = 1)
+          )
+    ";
+    $stmt = $db->prepare($sql);
+    $stmt->execute([':dow' => $dayOfWeek]);
+}
 $subscribers = $stmt->fetchAll();
 
 $sent = 0;
@@ -94,7 +107,9 @@ foreach ($subscribers as $sub) {
     $unsubToken = $sub['unsubscribe_token'];
 
     // Determine "since" date for content lookup
-    if ($sub['last_sent_at']) {
+    if ($testMode) {
+        $since = date('Y-m-d H:i:s', strtotime('-30 days'));
+    } elseif ($sub['last_sent_at']) {
         $since = $sub['last_sent_at'];
     } else {
         $since = ($frequency === 'daily')
@@ -183,9 +198,11 @@ HTML;
         error_log("Newsletter: failed to send to {$email}");
     }
 
-    // Update last_sent_at
-    $updStmt = $db->prepare('UPDATE user_newsletter_subscribers SET last_sent_at = NOW() WHERE id = :id');
-    $updStmt->execute([':id' => $subscriberId]);
+    // Update last_sent_at (skip in test mode)
+    if (!$testMode) {
+        $updStmt = $db->prepare('UPDATE user_newsletter_subscribers SET last_sent_at = NOW() WHERE id = :id');
+        $updStmt->execute([':id' => $subscriberId]);
+    }
 }
 
 echo "Newsletter sent: {$sent} emails, {$errors} errors\n";
