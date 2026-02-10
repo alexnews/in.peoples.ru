@@ -221,6 +221,9 @@ function renderNews(array $items): string
         $title = htmlspecialchars(fromDb($item['title'] ?? '') ?? '', ENT_QUOTES, 'UTF-8');
         $desc  = htmlspecialchars(mb_substr(fromDb($item['description'] ?? '') ?? '', 0, 120, 'UTF-8'), ENT_QUOTES, 'UTF-8');
         $path  = htmlspecialchars($item['path'] ?? '', ENT_QUOTES, 'UTF-8');
+        if ($path && !str_starts_with($path, '/') && !str_starts_with($path, 'http')) {
+            $path = '/' . $path;
+        }
         $url   = $path ? "https://peoples.ru{$path}" : '#';
         $html .= "<li style=\"margin-bottom:8px;\"><a href=\"{$url}\" style=\"color:#d92228;text-decoration:none;\">{$title}</a>";
         if ($desc) {
@@ -242,7 +245,13 @@ function renderHistories(array $items): string
         $epigraph = htmlspecialchars(mb_substr(fromDb($item['Epigraph'] ?? '') ?? '', 0, 150, 'UTF-8'), ENT_QUOTES, 'UTF-8');
         $person   = htmlspecialchars(fromDb($item['FullNameRus'] ?? '') ?? '', ENT_QUOTES, 'UTF-8');
         $url      = htmlspecialchars($item['AllUrlInSity'] ?? '', ENT_QUOTES, 'UTF-8');
-        $link     = $url ? "https://peoples.ru{$url}" : '#';
+        if ($url && str_starts_with($url, 'http')) {
+            $link = $url;
+        } elseif ($url) {
+            $link = "https://peoples.ru{$url}";
+        } else {
+            $link = '#';
+        }
         $html .= "<li style=\"margin-bottom:8px;\">";
         $html .= "<a href=\"{$link}\" style=\"color:#d92228;text-decoration:none;\">{$person}</a>";
         if ($epigraph) {
