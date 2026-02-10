@@ -40,27 +40,27 @@ $sectionDefs = [
     ],
     7  => [
         'name'       => 'Песни',
-        'query'      => "SELECT s.content, p.FullNameRus FROM songs s JOIN persons p ON p.Persons_id=s.KodPersons WHERE s.date_registration > :since ORDER BY s.date_registration DESC LIMIT 5",
+        'query'      => "SELECT s.song AS content, p.FullNameRus FROM songs s JOIN persons p ON p.Persons_id=s.KodPersons WHERE s.date_registration > :since ORDER BY s.date_registration DESC LIMIT 5",
         'renderer'   => 'renderWithPerson',
     ],
     19 => [
         'name'       => 'Стихи',
-        'query'      => "SELECT s.content, p.FullNameRus FROM poetry s JOIN persons p ON p.Persons_id=s.KodPersons WHERE s.date_registration > :since ORDER BY s.date_registration DESC LIMIT 5",
+        'query'      => "SELECT s.Poetry AS content, p.FullNameRus FROM poetry s JOIN persons p ON p.Persons_id=s.KodPersons WHERE s.date_registration > :since ORDER BY s.date_registration DESC LIMIT 5",
         'renderer'   => 'renderWithPerson',
     ],
     29 => [
         'name'       => 'Цитаты',
-        'query'      => "SELECT aphorism AS content FROM aphorism WHERE date_registration > :since AND deleted='N' ORDER BY date_registration DESC LIMIT 5",
-        'renderer'   => 'renderContent',
+        'query'      => "SELECT a.aphorism AS content, p.FullNameRus FROM aphorism.aphorism a JOIN aphorism.aph_avtor aa ON aa.avtor = a.avtor JOIN persons p ON p.Persons_id = aa.peoples WHERE a.data > :since ORDER BY a.data DESC LIMIT 5",
+        'renderer'   => 'renderWithPerson',
     ],
     31 => [
         'name'       => 'Анекдоты',
-        'query'      => "SELECT a.Anek_txt AS content, p.FullNameRus FROM Anekdot a JOIN persons p ON p.Persons_id=a.KodPersons WHERE a.date_registration > :since AND a.del='N' AND a.KodPersons > 0 ORDER BY a.date_registration DESC LIMIT 5",
-        'renderer'   => 'renderWithPerson',
+        'query'      => "SELECT a.Anek_txt AS content, a.path, p.FullNameRus FROM Anekdot a JOIN persons p ON p.Persons_id=a.KodPersons WHERE a.date_registration > :since AND a.del='N' AND a.KodPersons > 0 ORDER BY a.date_registration DESC LIMIT 5",
+        'renderer'   => 'renderAnekdot',
     ],
     13 => [
         'name'       => 'Интересное',
-        'query'      => "SELECT title, description FROM interesting WHERE date_registration > :since ORDER BY date_registration DESC LIMIT 5",
+        'query'      => "SELECT name AS title, description FROM interesting WHERE date_registration > :since ORDER BY date_registration DESC LIMIT 5",
         'renderer'   => 'renderTitleDesc',
     ],
 ];
@@ -106,16 +106,10 @@ foreach ($subscribers as $sub) {
     $frequency = $sub['frequency'];
     $unsubToken = $sub['unsubscribe_token'];
 
-    // Determine "since" date for content lookup
-    if ($testMode) {
-        $since = date('Y-m-d H:i:s', strtotime('-30 days'));
-    } elseif ($sub['last_sent_at']) {
-        $since = $sub['last_sent_at'];
-    } else {
-        $since = ($frequency === 'daily')
-            ? date('Y-m-d H:i:s', strtotime('-1 day'))
-            : date('Y-m-d H:i:s', strtotime('-7 days'));
-    }
+    // Determine "since" date for content lookup (fixed window by frequency)
+    $since = ($frequency === 'daily')
+        ? date('Y-m-d H:i:s', strtotime('-1 day'))
+        : date('Y-m-d H:i:s', strtotime('-7 days'));
 
     // Fetch subscriber's section subscriptions
     $secStmt = $db->prepare('SELECT section_id FROM user_newsletter_sections WHERE subscriber_id = :sid');
@@ -287,6 +281,24 @@ function renderWithPerson(array $items): string
         $person  = htmlspecialchars(fromDb($item['FullNameRus'] ?? '') ?? '', ENT_QUOTES, 'UTF-8');
         $html .= "<p style=\"margin:8px 0;padding:10px;background:#f9f9f9;border-left:3px solid #d92228;font-size:14px;\">";
         $html .= "<strong>{$person}</strong><br>{$content}...";
+        $html .= '</p>';
+    }
+    return $html;
+}
+
+/**
+ * Render anekdots with person name and link.
+ */
+function renderAnekdot(array $items): string
+{
+    $html = '';
+    foreach ($items as $item) {
+        $content = htmlspecialchars(mb_substr(fromDb($item['content'] ?? '') ?? '', 0, 150, 'UTF-8'), ENT_QUOTES, 'UTF-8');
+        $person  = htmlspecialchars(fromDb($item['FullNameRus'] ?? '') ?? '', ENT_QUOTES, 'UTF-8');
+        $path    = htmlspecialchars($item['path'] ?? '', ENT_QUOTES, 'UTF-8');
+        $url     = $path ? "https://www.peoples.ru/anekdot/{$path}.shtml" : '#';
+        $html .= "<p style=\"margin:8px 0;padding:10px;background:#f9f9f9;border-left:3px solid #d92228;font-size:14px;\">";
+        $html .= "<a href=\"{$url}\" style=\"color:#d92228;text-decoration:none;\"><strong>{$person}</strong></a><br>{$content}...";
         $html .= '</p>';
     }
     return $html;

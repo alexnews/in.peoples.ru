@@ -107,6 +107,12 @@ if (!in_array($frequency, ['daily', 'weekly'], true)) {
 $db = getDb();
 $emailDb = toDb($email);
 
+// --- Try to match email to an existing user ---
+$userStmt = $db->prepare('SELECT id FROM users WHERE email = :email LIMIT 1');
+$userStmt->execute([':email' => $emailDb]);
+$matchedUserId = $userStmt->fetchColumn();
+$matchedUserId = $matchedUserId !== false ? (int) $matchedUserId : null;
+
 // --- Check for existing subscriber ---
 $stmt = $db->prepare('SELECT id, status, confirm_token FROM user_newsletter_subscribers WHERE email = :email');
 $stmt->execute([':email' => $emailDb]);
@@ -141,6 +147,7 @@ if ($existing) {
             UPDATE user_newsletter_subscribers
             SET status = :status, frequency = :freq,
                 confirm_token = :ct, unsubscribe_token = :ut,
+                user_id = :uid,
                 confirmed_at = NULL, last_sent_at = NULL
             WHERE id = :id
         ');
@@ -149,6 +156,7 @@ if ($existing) {
             ':freq'   => $frequency,
             ':ct'     => $confirmToken,
             ':ut'     => $unsubscribeToken,
+            ':uid'    => $matchedUserId,
             ':id'     => $existing['id'],
         ]);
 
@@ -175,8 +183,8 @@ $confirmToken     = bin2hex(random_bytes(32));
 $unsubscribeToken = bin2hex(random_bytes(32));
 
 $stmt = $db->prepare('
-    INSERT INTO user_newsletter_subscribers (email, frequency, status, confirm_token, unsubscribe_token)
-    VALUES (:email, :freq, :status, :ct, :ut)
+    INSERT INTO user_newsletter_subscribers (email, frequency, status, confirm_token, unsubscribe_token, user_id)
+    VALUES (:email, :freq, :status, :ct, :ut, :uid)
 ');
 $stmt->execute([
     ':email'  => $emailDb,
@@ -184,6 +192,7 @@ $stmt->execute([
     ':status' => 'pending',
     ':ct'     => $confirmToken,
     ':ut'     => $unsubscribeToken,
+    ':uid'    => $matchedUserId,
 ]);
 
 $subscriberId = (int) $db->lastInsertId();

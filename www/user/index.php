@@ -51,6 +51,37 @@ $stmt = $db->prepare(
 $stmt->execute([':uid' => $userId]);
 $recentSubmissions = fromDbRows($stmt->fetchAll());
 
+// Fetch newsletter subscription by user email
+$userEmail = toDb($currentUser['email'] ?? '');
+$nlStmt = $db->prepare(
+    'SELECT ns.id, ns.frequency, ns.status, ns.unsubscribe_token
+     FROM user_newsletter_subscribers ns
+     WHERE ns.email = :email
+     LIMIT 1'
+);
+$nlStmt->execute([':email' => $userEmail]);
+$newsletter = $nlStmt->fetch();
+
+$nlSections = [];
+if ($newsletter) {
+    $nlSecStmt = $db->prepare(
+        'SELECT sec.section_id FROM user_newsletter_sections sec WHERE sec.subscriber_id = :sid'
+    );
+    $nlSecStmt->execute([':sid' => $newsletter['id']]);
+    $nlSections = $nlSecStmt->fetchAll(PDO::FETCH_COLUMN);
+}
+
+$nlSectionNames = [
+    4  => 'Новости',
+    2  => 'Истории',
+    8  => 'Мир фактов',
+    7  => 'Песни',
+    19 => 'Стихи',
+    29 => 'Цитаты',
+    31 => 'Анекдоты',
+    13 => 'Интересное',
+];
+
 // Section icons
 $sectionIcons = [
     2 => 'bi-book',
@@ -111,6 +142,51 @@ $statusBadge = [
         </div>
     </div>
 </div>
+
+<!-- Newsletter Subscription -->
+<h5 class="mb-3"><i class="bi bi-envelope me-1"></i>Рассылка</h5>
+<?php if ($newsletter && $newsletter['status'] === 'confirmed'): ?>
+<div class="card mb-4">
+    <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div>
+            <span class="badge bg-success me-2">Подписка активна</span>
+            <span class="text-muted small">
+                <?= $newsletter['frequency'] === 'daily' ? 'Ежедневно' : 'Еженедельно' ?> &middot;
+                <?php
+                $names = [];
+                foreach ($nlSections as $sid) {
+                    if (isset($nlSectionNames[(int)$sid])) {
+                        $names[] = $nlSectionNames[(int)$sid];
+                    }
+                }
+                echo htmlspecialchars(implode(', ', $names), ENT_QUOTES, 'UTF-8');
+                ?>
+            </span>
+        </div>
+        <a href="/newsletter.php?token=<?= urlencode($newsletter['unsubscribe_token']) ?>" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-gear me-1"></i>Настроить
+        </a>
+    </div>
+</div>
+<?php elseif ($newsletter && $newsletter['status'] === 'pending'): ?>
+<div class="card mb-4">
+    <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div>
+            <span class="badge bg-warning text-dark me-2">Ожидает подтверждения</span>
+            <span class="text-muted small">Проверьте почту для подтверждения подписки</span>
+        </div>
+    </div>
+</div>
+<?php else: ?>
+<div class="card mb-4">
+    <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="text-muted">Вы не подписаны на рассылку peoples.ru</div>
+        <a href="/newsletter.php" class="btn btn-sm btn-brand">
+            <i class="bi bi-envelope-check me-1"></i>Подписаться
+        </a>
+    </div>
+</div>
+<?php endif; ?>
 
 <!-- Add Content — Section Cards -->
 <h5 class="mb-3"><i class="bi bi-plus-circle me-1"></i>Добавить материал</h5>
