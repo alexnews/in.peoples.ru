@@ -12,6 +12,8 @@ declare(strict_types=1);
  *   - email: string
  *   - sections: array of section IDs
  *   - frequency: 'daily' | 'weekly'
+ *   - website: string (honeypot — must be empty)
+ *   - bot_token: string (time-based token — 'ok_' + timestamp, 1s-10min old)
  */
 
 require_once __DIR__ . '/../config.php';
@@ -37,6 +39,22 @@ if (is_file($rateLimitFile)) {
     $rateData = ['time' => time(), 'count' => 1];
 }
 file_put_contents($rateLimitFile, json_encode($rateData));
+
+// --- Bot protection: honeypot + time-based token ---
+$honeypot = trim((string) getInput('website', ''));
+if ($honeypot !== '') {
+    jsonError('Ошибка отправки формы.', 'BOT_DETECTED', 400);
+}
+
+$botToken = trim((string) getInput('bot_token', ''));
+if ($botToken === '' || !preg_match('/^ok_\d{10,13}$/', $botToken)) {
+    jsonError('Подтвердите, что вы не робот.', 'BOT_DETECTED', 400);
+}
+$tokenTime = (int) substr($botToken, 3);
+$nowMs = (int) (microtime(true) * 1000);
+if (($nowMs - $tokenTime) < 1000 || ($nowMs - $tokenTime) > 600000) {
+    jsonError('Подтвердите, что вы не робот.', 'BOT_DETECTED', 400);
+}
 
 // --- Allowed newsletter sections ---
 $allowedSections = [

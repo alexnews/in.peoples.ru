@@ -4,11 +4,15 @@
  *
  * No authentication required. Displays a form with email, section checkboxes,
  * and frequency selector. Submits to /api/v1/newsletter/subscribe.php via AJAX.
+ *
+ * Bot protection: honeypot field + time-based bot token (same pattern as register.php).
  */
 
 declare(strict_types=1);
 
 header('Content-Type: text/html; charset=UTF-8');
+
+$prefillEmail = isset($_GET['email']) ? htmlspecialchars(trim($_GET['email']), ENT_QUOTES, 'UTF-8') : '';
 ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -27,6 +31,7 @@ header('Content-Type: text/html; charset=UTF-8');
         .btn-brand:hover { background-color: #b81e23; border-color: #b81e23; color: #fff; }
         .section-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         @media (max-width: 400px) { .section-grid { grid-template-columns: 1fr; } }
+        .hp-field { position: absolute; left: -9999px; }
     </style>
 </head>
 <body>
@@ -46,10 +51,20 @@ header('Content-Type: text/html; charset=UTF-8');
                 <div id="alert-container"></div>
 
                 <form id="newsletter-form" novalidate>
+                    <!-- Honeypot — hidden from humans, bots fill it -->
+                    <div class="hp-field">
+                        <label for="website">Website</label>
+                        <input type="text" name="website" id="website" tabindex="-1" autocomplete="off">
+                    </div>
+
+                    <!-- Bot token — set by JS after delay -->
+                    <input type="hidden" name="bot_token" id="bot_token" value="">
+
                     <div class="mb-3">
                         <label for="email" class="form-label">Email-адрес</label>
                         <input type="email" class="form-control" id="email" name="email"
-                               placeholder="you@example.com" required autofocus>
+                               placeholder="you@example.com" required
+                               value="<?= $prefillEmail ?>">
                         <div class="invalid-feedback" id="email-error"></div>
                     </div>
 
@@ -120,6 +135,11 @@ header('Content-Type: text/html; charset=UTF-8');
 </div>
 
 <script>
+// Set bot token after 1 second (bots submit instantly)
+setTimeout(function() {
+    document.getElementById('bot_token').value = 'ok_' + Date.now();
+}, 1000);
+
 document.getElementById('newsletter-form').addEventListener('submit', function(e) {
     e.preventDefault();
 
@@ -161,7 +181,13 @@ document.getElementById('newsletter-form').addEventListener('submit', function(e
     fetch('/api/v1/newsletter/subscribe.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email, sections: sections, frequency: frequency })
+        body: JSON.stringify({
+            email: email,
+            sections: sections,
+            frequency: frequency,
+            website: document.getElementById('website').value,
+            bot_token: document.getElementById('bot_token').value
+        })
     })
     .then(function(res) { return res.json(); })
     .then(function(data) {
