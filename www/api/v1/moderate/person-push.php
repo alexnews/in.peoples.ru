@@ -13,7 +13,7 @@ declare(strict_types=1);
  *
  * Tables used:
  * - user_person_suggestions: read data, update status to 'published'
- * - persons: INSERT new person (approve='NO', admin sets path/URL later)
+ * - persons: INSERT new person (approve='YES' — fully moderated at this point)
  * - histories: INSERT biography linked to new Persons_id
  * - users: reputation update (+10 for published person)
  * - users_moderation_log: audit trail
@@ -134,7 +134,7 @@ try {
         jsonError('URL ' . $allUrlInSity . ' already exists. Use the preview to pick a unique slug.', 'DUPLICATE_URL', 400);
     }
 
-    // INSERT into persons table with approve='NO'
+    // INSERT into persons table with approve='YES' (fully moderated by this point)
     $personStmt = $db->prepare(
         "INSERT INTO persons (
             NameRus, SurNameRus, FullNameRus,
@@ -149,7 +149,7 @@ try {
             :epigraph, :namePhoto, :dateIn, :dateOut, :gender,
             :townIn, :cc2born, :cc2dead, :cc2,
             :kodStructure, :allUrl, :path,
-            'NO'
+            'YES'
         )"
     );
     $personStmt->execute([
@@ -175,6 +175,9 @@ try {
 
     $newPersonId = (int) $db->lastInsertId();
 
+    // Convert markdown biography to HTML before saving
+    $biographyHtml = markdownToHtml($biography);
+
     // INSERT biography into histories
     $bioStmt = $db->prepare(
         'INSERT INTO histories (KodPersons, Content, Epigraph, date_pub)
@@ -182,7 +185,7 @@ try {
     );
     $bioStmt->execute([
         ':kod'      => $newPersonId,
-        ':content'  => toDb($biography),
+        ':content'  => toDb($biographyHtml),
         ':epigraph' => toDb($articleEpigraph),
     ]);
 
@@ -264,4 +267,77 @@ function transliteratePersonName(string $name, string $surname): string
     $slug = trim($slug, '-');
 
     return $slug ?: 'person-' . time();
+}
+
+/**
+ * Convert simple markdown to HTML.
+ *
+ * Supported syntax:
+ * - # Heading 1, ## Heading 2, ### Heading 3
+ * - > Blockquote
+ * - **bold**, *italic*
+ * - Blank-line-separated paragraphs → <p>
+ * - Line breaks within a paragraph → <br>
+ */
+function markdownToHtml(string $text): string
+{
+    $text = str_replace("\r\n", "\n", $text);
+    $text = trim($text);
+
+    if ($text === '') {
+        return '';
+    }
+
+    // Split into blocks by blank lines
+    $blocks = preg_split('/\n{2,}/', $text);
+    $html = '';
+
+    foreach ($blocks as $block) {
+        $block = trim($block);
+        if ($block === '') {
+            continue;
+        }
+
+        // Headings
+        if (preg_match('/^(#{1,3})\s+(.+)$/', $block, $m)) {
+            $level = strlen($m[1]);
+            $content = htmlspecialchars($m[2], ENT_QUOTES, 'UTF-8');
+            $content = applyInlineFormatting($content);
+            $html .= "<h{$level}>{$content}</h{$level}>\n";
+            continue;
+        }
+
+        // Blockquote (lines starting with >)
+        if (preg_match('/^>\s/', $block)) {
+            $lines = explode("\n", $block);
+            $quoteLines = [];
+            foreach ($lines as $line) {
+                $quoteLines[] = htmlspecialchars(preg_replace('/^>\s?/', '', $line), ENT_QUOTES, 'UTF-8');
+            }
+            $quoteContent = applyInlineFormatting(implode('<br>', $quoteLines));
+            $html .= "<blockquote>{$quoteContent}</blockquote>\n";
+            continue;
+        }
+
+        // Regular paragraph
+        $escaped = htmlspecialchars($block, ENT_QUOTES, 'UTF-8');
+        $escaped = applyInlineFormatting($escaped);
+        // Preserve single line breaks as <br>
+        $escaped = str_replace("\n", "<br>\n", $escaped);
+        $html .= "<p>{$escaped}</p>\n";
+    }
+
+    return $html;
+}
+
+/**
+ * Apply inline markdown formatting: **bold** and *italic*.
+ */
+function applyInlineFormatting(string $text): string
+{
+    // **bold**
+    $text = preg_replace('/\*\*(.+?)\*\*/', '<b>$1</b>', $text) ?? $text;
+    // *italic*
+    $text = preg_replace('/\*(.+?)\*/', '<i>$1</i>', $text) ?? $text;
+    return $text;
 }
