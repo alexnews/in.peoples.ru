@@ -153,7 +153,7 @@ header('Content-Type: text/html; charset=UTF-8');
                         </div>
                         <div class="card-footer d-flex gap-2">
                             <?php if (!empty($p['AllUrlInSity'])): ?>
-                            <a href="https://www.peoples.ru/<?= htmlspecialchars($p['AllUrlInSity'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" class="btn btn-sm btn-outline-secondary flex-fill" title="Профиль на peoples.ru">
+                            <a href="<?= htmlspecialchars($p['AllUrlInSity'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" class="btn btn-sm btn-outline-secondary flex-fill" title="Профиль на peoples.ru">
                                 <i class="bi bi-person-lines-fill me-1"></i>Профиль
                             </a>
                             <?php endif; ?>

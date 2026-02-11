@@ -217,7 +217,7 @@ header('Content-Type: text/html; charset=UTF-8');
                     </a>
                     <?php endif; ?>
                     <?php if ($personPath): ?>
-                    <a href="https://www.peoples.ru/<?= htmlspecialchars($personPath, ENT_QUOTES, 'UTF-8') ?>"
+                    <a href="<?= htmlspecialchars($personPath, ENT_QUOTES, 'UTF-8') ?>"
                        class="btn btn-outline-secondary" target="_blank" rel="noopener">
                         <i class="bi bi-person-lines-fill me-1"></i>Профиль на peoples.ru
                     </a>
@@ -359,7 +359,7 @@ header('Content-Type: text/html; charset=UTF-8');
                     </div>
                     <div class="card-footer d-flex gap-2">
                         <?php if (!empty($s['AllUrlInSity'])): ?>
-                        <a href="https://www.peoples.ru/<?= htmlspecialchars($s['AllUrlInSity'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" class="btn btn-sm btn-outline-secondary flex-fill" title="Профиль на peoples.ru">
+                        <a href="<?= htmlspecialchars($s['AllUrlInSity'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" class="btn btn-sm btn-outline-secondary flex-fill" title="Профиль на peoples.ru">
                             <i class="bi bi-person-lines-fill me-1"></i>Профиль
                         </a>
                         <?php endif; ?>
