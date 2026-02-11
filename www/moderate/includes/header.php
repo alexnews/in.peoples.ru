@@ -39,6 +39,10 @@ $newBookingCount = (int) $bookingBadgeStmt->fetchColumn();
 $appBadgeStmt = $db->query("SELECT COUNT(*) FROM booking_applications WHERE status = 'new'");
 $newApplicationCount = (int) $appBadgeStmt->fetchColumn();
 
+// New info change requests count
+$infoChangeBadgeStmt = $db->query("SELECT COUNT(*) FROM user_info_change_requests WHERE status = 'new'");
+$newInfoChangeCount = (int) $infoChangeBadgeStmt->fetchColumn();
+
 $pageTitle = $pageTitle ?? 'Модерация';
 $currentPage = basename($_SERVER['SCRIPT_NAME']);
 ?>
@@ -105,6 +109,14 @@ $currentPage = basename($_SERVER['SCRIPT_NAME']);
                         <?php $totalBookingBadge = $newBookingCount + $newApplicationCount; ?>
                         <?php if ($totalBookingBadge > 0): ?>
                             <span class="badge bg-danger ms-1 pending-badge"><?= $totalBookingBadge ?></span>
+                        <?php endif; ?>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= $currentPage === 'info-changes.php' ? 'active' : '' ?>" href="/moderate/info-changes.php">
+                        <i class="bi bi-pencil-square me-1"></i>Инфо
+                        <?php if ($newInfoChangeCount > 0): ?>
+                            <span class="badge bg-danger ms-1 pending-badge"><?= $newInfoChangeCount ?></span>
                         <?php endif; ?>
                     </a>
                 </li>
