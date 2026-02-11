@@ -32,7 +32,7 @@ header('Content-Type: text/html; charset=UTF-8');
 <section class="info-change-hero">
     <div class="container">
         <h1>Изменить информацию о персоне</h1>
-        <p>Вы — артист, менеджер или представитель? Нашли неточность в биографии? Заполните форму, и мы внесём исправления.</p>
+        <p>Вы — известный человек, менеджер или представитель? Нашли неточность в биографии? Заполните форму, и мы внесём исправления.</p>
     </div>
 </section>
 
@@ -58,7 +58,7 @@ header('Content-Type: text/html; charset=UTF-8');
                             <label class="form-label">Кто вы?</label>
                             <select name="requester_role" class="form-select">
                                 <option value="other">— Выберите —</option>
-                                <option value="self">Я сам артист / персона</option>
+                                <option value="self">Я сам / сама</option>
                                 <option value="manager">Менеджер / представитель</option>
                                 <option value="relative">Родственник</option>
                                 <option value="fan">Поклонник</option>

@@ -328,7 +328,7 @@ header('Content-Type: text/html; charset=UTF-8');
 <?php if (!empty($similar)): ?>
 <section class="py-5">
     <div class="container">
-        <h2 class="h4 mb-4">Похожие артисты</h2>
+        <h2 class="h4 mb-4">Похожие знаменитости</h2>
         <div class="row g-4">
             <?php foreach ($similar as $s): ?>
             <div class="col-6 col-md-3">

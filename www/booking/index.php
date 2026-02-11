@@ -42,7 +42,7 @@ $featStmt = $db->query(
 $featured = fromDbRows($featStmt->fetchAll());
 
 $pageTitle = 'Пригласить знаменитость на мероприятие';
-$pageDesc = 'Закажите выступление звезды на корпоративе, свадьбе или дне рождения. Более 175 000 знаменитостей в базе peoples.ru';
+$pageDesc = 'Пригласите знаменитость на мероприятие. Помогаем организовать встречи с известными людьми — в том числе с теми, кого незаслуженно забыли.';
 
 header('Content-Type: text/html; charset=UTF-8');
 ?>
@@ -64,7 +64,7 @@ header('Content-Type: text/html; charset=UTF-8');
 <section class="booking-hero">
     <div class="container">
         <h1>Пригласить знаменитость на мероприятие</h1>
-        <p>Закажите выступление звезды на вашем мероприятии. Ведущие, певцы, комики, DJ и другие артисты.</p>
+        <p>Помогаем организовать встречи со спортсменами, писателями, музыкантами и другими известными людьми. Мы возвращаем внимание к тем, кого незаслуженно забыли, и поддерживаем память о них.</p>
         <div class="search-wrapper">
             <input type="text" id="heroPersonSearch" class="form-control" placeholder="Введите имя знаменитости..." autocomplete="off">
             <i class="bi bi-search search-icon"></i>
@@ -82,7 +82,7 @@ header('Content-Type: text/html; charset=UTF-8');
 <?php if (!empty($categories)): ?>
 <section class="booking-categories py-5">
     <div class="container">
-        <h2 class="text-center mb-4">Категории артистов</h2>
+        <h2 class="text-center mb-4">Категории</h2>
         <div class="row g-3">
             <?php foreach ($categories as $cat): ?>
             <div class="col-6 col-md-3">
@@ -91,7 +91,7 @@ header('Content-Type: text/html; charset=UTF-8');
                         <i class="bi <?= htmlspecialchars($cat['icon'] ?? 'bi-star', ENT_QUOTES, 'UTF-8') ?>"></i>
                     </div>
                     <div class="cat-name"><?= htmlspecialchars($cat['name'], ENT_QUOTES, 'UTF-8') ?></div>
-                    <div class="cat-count"><?= (int)$cat['person_count'] ?> артистов</div>
+                    <div class="cat-count"><?= (int)$cat['person_count'] ?> человек</div>
                 </a>
             </div>
             <?php endforeach; ?>
@@ -104,7 +104,7 @@ header('Content-Type: text/html; charset=UTF-8');
 <?php if (!empty($featured)): ?>
 <section class="py-5 bg-light">
     <div class="container">
-        <h2 class="text-center mb-4">Популярные артисты</h2>
+        <h2 class="text-center mb-4">Известные люди</h2>
         <div class="row g-4">
             <?php foreach ($featured as $fp): ?>
             <div class="col-6 col-md-3">
@@ -145,8 +145,8 @@ header('Content-Type: text/html; charset=UTF-8');
             <div class="col-md-4">
                 <div class="step">
                     <div class="step-number">1</div>
-                    <h5>Выберите артиста</h5>
-                    <p>Найдите нужного артиста через поиск или каталог по категориям.</p>
+                    <h5>Найдите человека</h5>
+                    <p>Воспользуйтесь поиском или каталогом по категориям.</p>
                 </div>
             </div>
             <div class="col-md-4">
@@ -160,7 +160,7 @@ header('Content-Type: text/html; charset=UTF-8');
                 <div class="step">
                     <div class="step-number">3</div>
                     <h5>Мы организуем</h5>
-                    <p>Наш менеджер свяжется с вами и поможет организовать выступление.</p>
+                    <p>Наш менеджер свяжется с вами и поможет организовать встречу.</p>
                 </div>
             </div>
         </div>
@@ -173,7 +173,7 @@ header('Content-Type: text/html; charset=UTF-8');
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <h2 class="text-center mb-4">Оставить заявку</h2>
-                <p class="text-center text-muted mb-4">Не нашли нужного артиста? Опишите, кого вы ищете, и мы поможем подобрать.</p>
+                <p class="text-center text-muted mb-4">Не нашли нужного человека? Опишите, кого вы ищете, и мы постараемся помочь.</p>
                 <div class="booking-form">
                     <form class="booking-request-form">
                         <div class="row">
@@ -219,7 +219,7 @@ header('Content-Type: text/html; charset=UTF-8');
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Сообщение</label>
-                            <textarea name="message" class="form-control" rows="3" placeholder="Опишите, какого артиста вы ищете и детали мероприятия..."></textarea>
+                            <textarea name="message" class="form-control" rows="3" placeholder="Опишите, с кем вы хотите встретиться и детали мероприятия..."></textarea>
                         </div>
                         <!-- Honeypot -->
                         <div class="booking-hp">
@@ -239,10 +239,10 @@ header('Content-Type: text/html; charset=UTF-8');
 <!-- CTA for artists -->
 <section class="booking-register-cta">
     <div class="container text-center">
-        <h2>Вы — артист?</h2>
-        <p>Если вы ведущий, музыкант, комик, актёр или спортсмен — оставьте заявку, и мы добавим вас в наш каталог.</p>
+        <h2>Вы — известный человек?</h2>
+        <p>Если вы спортсмен, писатель, музыкант, актёр или другая известная личность — оставьте заявку, и мы добавим вас в каталог.</p>
         <a href="/booking/register/" class="btn btn-brand btn-lg">
-            <i class="bi bi-person-plus me-1"></i>Оставить заявку артиста
+            <i class="bi bi-person-plus me-1"></i>Оставить заявку
         </a>
     </div>
 </section>
