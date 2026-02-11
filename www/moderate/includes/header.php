@@ -35,6 +35,10 @@ $pendingPersonCount = (int) $personBadgeStmt->fetchColumn();
 $bookingBadgeStmt = $db->query("SELECT COUNT(*) FROM booking_requests WHERE status = 'new'");
 $newBookingCount = (int) $bookingBadgeStmt->fetchColumn();
 
+// New booking applications (celebrity self-registration) count
+$appBadgeStmt = $db->query("SELECT COUNT(*) FROM booking_applications WHERE status = 'new'");
+$newApplicationCount = (int) $appBadgeStmt->fetchColumn();
+
 $pageTitle = $pageTitle ?? 'Модерация';
 $currentPage = basename($_SERVER['SCRIPT_NAME']);
 ?>
@@ -96,10 +100,11 @@ $currentPage = basename($_SERVER['SCRIPT_NAME']);
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link <?= in_array($currentPage, ['booking.php', 'booking-persons.php', 'booking-categories.php']) ? 'active' : '' ?>" href="/moderate/booking.php">
+                    <a class="nav-link <?= in_array($currentPage, ['booking.php', 'booking-persons.php', 'booking-categories.php', 'booking-applications.php']) ? 'active' : '' ?>" href="/moderate/booking.php">
                         <i class="bi bi-calendar-event me-1"></i>Букинг
-                        <?php if ($newBookingCount > 0): ?>
-                            <span class="badge bg-danger ms-1 pending-badge"><?= $newBookingCount ?></span>
+                        <?php $totalBookingBadge = $newBookingCount + $newApplicationCount; ?>
+                        <?php if ($totalBookingBadge > 0): ?>
+                            <span class="badge bg-danger ms-1 pending-badge"><?= $totalBookingBadge ?></span>
                         <?php endif; ?>
                     </a>
                 </li>

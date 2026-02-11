@@ -106,6 +106,16 @@ require_once __DIR__ . '/includes/header.php';
 <div class="d-flex align-items-center justify-content-between mb-3">
     <h4 class="mb-0"><i class="bi bi-calendar-event me-2"></i>Заявки на букинг</h4>
     <div>
+        <?php
+        $appCountStmt = $db->query("SELECT COUNT(*) FROM booking_applications WHERE status = 'new'");
+        $newAppCount = (int) $appCountStmt->fetchColumn();
+        ?>
+        <a href="/moderate/booking-applications.php" class="btn btn-sm btn-outline-warning me-1">
+            <i class="bi bi-person-badge me-1"></i>Заявки артистов
+            <?php if ($newAppCount > 0): ?>
+                <span class="badge bg-danger"><?= $newAppCount ?></span>
+            <?php endif; ?>
+        </a>
         <a href="/moderate/booking-persons.php" class="btn btn-sm btn-outline-secondary me-1">
             <i class="bi bi-people me-1"></i>Персоны
         </a>

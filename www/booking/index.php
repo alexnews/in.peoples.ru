@@ -110,7 +110,7 @@ header('Content-Type: text/html; charset=UTF-8');
             <div class="col-6 col-md-3">
                 <div class="booking-card">
                     <?php if (!empty($fp['NamePhoto'])): ?>
-                        <img src="https://www.peoples.ru/<?= htmlspecialchars($fp['NamePhoto'], ENT_QUOTES, 'UTF-8') ?>"
+                        <img src="<?= htmlspecialchars(($fp['AllUrlInSity'] ?? '') . $fp['NamePhoto'], ENT_QUOTES, 'UTF-8') ?>"
                              class="card-img-top" alt="<?= htmlspecialchars($fp['FullNameRus'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
                     <?php else: ?>
                         <div class="card-img-placeholder"><i class="bi bi-person"></i></div>
@@ -233,6 +233,17 @@ header('Content-Type: text/html; charset=UTF-8');
                 </div>
             </div>
         </div>
+    </div>
+</section>
+
+<!-- CTA for artists -->
+<section class="booking-register-cta">
+    <div class="container text-center">
+        <h2>Вы — артист?</h2>
+        <p>Если вы ведущий, музыкант, комик, актёр или спортсмен — оставьте заявку, и мы добавим вас в наш каталог.</p>
+        <a href="/booking/register/" class="btn btn-brand btn-lg">
+            <i class="bi bi-person-plus me-1"></i>Оставить заявку артиста
+        </a>
     </div>
 </section>
 

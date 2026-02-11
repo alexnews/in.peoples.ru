@@ -157,6 +157,73 @@
     });
 
     // ========================================================================
+    // Celebrity registration form
+    // ========================================================================
+
+    var registerForms = document.querySelectorAll('.booking-register-form');
+
+    registerForms.forEach(function (form) {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            var submitBtn = form.querySelector('[type="submit"]');
+            var resultDiv = form.querySelector('.form-result');
+
+            var data = {
+                full_name: (form.querySelector('[name="full_name"]')?.value || '').trim(),
+                phone: (form.querySelector('[name="phone"]')?.value || '').trim(),
+                email: (form.querySelector('[name="email"]')?.value || '').trim(),
+                city: (form.querySelector('[name="city"]')?.value || '').trim(),
+                category_id: form.querySelector('[name="category_id"]')?.value || null,
+                activity_description: (form.querySelector('[name="activity_description"]')?.value || '').trim(),
+                website: form.querySelector('[name="website"]')?.value || '',
+                bot_token: botToken
+            };
+
+            // Client-side validation
+            var errors = [];
+            if (!data.full_name || data.full_name.length < 2) {
+                errors.push('Укажите ваше имя');
+            }
+            if (!data.phone || data.phone.length < 6) {
+                errors.push('Укажите номер телефона');
+            }
+
+            if (errors.length) {
+                showFormResult(resultDiv, errors.join('. '), 'danger');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            var origText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Отправка...';
+
+            fetch('/api/v1/booking/register.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+                .then(function (r) { return r.json(); })
+                .then(function (result) {
+                    if (result.success) {
+                        showFormResult(resultDiv, result.data.message, 'success');
+                        form.reset();
+                    } else {
+                        var msg = result.error?.message || 'Произошла ошибка. Попробуйте позже.';
+                        showFormResult(resultDiv, msg, 'danger');
+                    }
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = origText;
+                })
+                .catch(function () {
+                    showFormResult(resultDiv, 'Ошибка сети. Проверьте соединение и попробуйте снова.', 'danger');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = origText;
+                });
+        });
+    });
+
+    // ========================================================================
     // Helpers
     // ========================================================================
 

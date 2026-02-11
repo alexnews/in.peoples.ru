@@ -8,3 +8,6 @@ RewriteRule ^category/([a-z0-9-]+)/?$ category.php?slug=$1 [L,QSA]
 
 # /booking/person/{id}/ → person.php?id={id}
 RewriteRule ^person/(\d+)/?$ person.php?id=$1 [L,QSA]
+
+# /booking/register/ → register.php
+RewriteRule ^register/?$ register.php [L,QSA]

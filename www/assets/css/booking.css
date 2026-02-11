@@ -257,6 +257,46 @@
     color: #ccc;
 }
 
+/* Celebrity registration hero */
+.booking-register-hero {
+    background: linear-gradient(135deg, #0f3460 0%, #533483 50%, #e94560 100%);
+    color: #fff;
+    padding: 60px 0;
+    text-align: center;
+}
+
+.booking-register-hero h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.booking-register-hero p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* CTA section on main booking page */
+.booking-register-cta {
+    background: linear-gradient(135deg, #533483 0%, #e94560 100%);
+    color: #fff;
+    padding: 50px 0;
+}
+
+.booking-register-cta h2 {
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.booking-register-cta p {
+    font-size: 1.05rem;
+    opacity: 0.9;
+    max-width: 550px;
+    margin: 0 auto 20px;
+}
+
 /* Honeypot */
 .booking-hp { position: absolute; left: -9999px; opacity: 0; }
 
@@ -281,4 +321,7 @@
     .booking-card .card-img-placeholder { height: 180px; }
     .booking-person-hero .person-photo,
     .booking-person-hero .person-photo-placeholder { width: 150px; height: 190px; }
+    .booking-register-hero { padding: 40px 0; }
+    .booking-register-hero h1 { font-size: 1.6rem; }
+    .booking-register-cta { padding: 35px 0; }
 }
