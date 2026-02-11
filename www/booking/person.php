@@ -66,6 +66,7 @@ $personPhoto = $person['NamePhoto'] ?? '';
 $personPath = $person['AllUrlInSity'] ?? '';
 $personEpigraph = $person['Epigraph'] ?? '';
 $famousFor = $person['famous_for'] ?? '';
+$isDeceased = !empty($person['DateOut']);
 
 // Calculate age
 $age = '';
@@ -189,6 +190,11 @@ header('Content-Type: text/html; charset=UTF-8');
                     <p class="text-muted fst-italic"><?= htmlspecialchars($personEpigraph, ENT_QUOTES, 'UTF-8') ?></p>
                 <?php endif; ?>
 
+                <?php if ($isDeceased): ?>
+                <div class="alert alert-secondary mt-2 mb-0 py-2 d-inline-block">
+                    <i class="bi bi-info-circle me-1"></i>К сожалению, этот человек ушёл из жизни. Приглашение невозможно.
+                </div>
+                <?php else: ?>
                 <div class="d-flex align-items-center gap-3 flex-wrap">
                     <?php if ($age): ?>
                         <span class="text-muted"><i class="bi bi-calendar3 me-1"></i><?= $age ?> лет</span>
@@ -202,11 +208,14 @@ header('Content-Type: text/html; charset=UTF-8');
                         </div>
                     <?php endif; ?>
                 </div>
+                <?php endif; ?>
 
                 <div class="mt-3 d-flex gap-2">
+                    <?php if (!$isDeceased): ?>
                     <a href="#booking-form" class="btn btn-brand">
                         <i class="bi bi-envelope me-1"></i>Пригласить
                     </a>
+                    <?php endif; ?>
                     <?php if ($personPath): ?>
                     <a href="https://www.peoples.ru/<?= htmlspecialchars($personPath, ENT_QUOTES, 'UTF-8') ?>"
                        class="btn btn-outline-secondary" target="_blank" rel="noopener">
@@ -233,6 +242,7 @@ header('Content-Type: text/html; charset=UTF-8');
 </section>
 <?php endif; ?>
 
+<?php if (!$isDeceased): ?>
 <!-- Booking form -->
 <section class="py-5 bg-light" id="booking-form">
     <div class="container">
@@ -323,8 +333,9 @@ header('Content-Type: text/html; charset=UTF-8');
         </div>
     </div>
 </section>
+<?php endif; ?>
 
-<!-- Similar artists -->
+<!-- Similar persons -->
 <?php if (!empty($similar)): ?>
 <section class="py-5">
     <div class="container">
