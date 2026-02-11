@@ -99,12 +99,12 @@ $eventTypeLabels = [
     'other'      => 'Другое',
 ];
 
-$pageTitle = 'Букинг — Заявки';
+$pageTitle = 'Приглашения — Заявки';
 require_once __DIR__ . '/includes/header.php';
 ?>
 
 <div class="d-flex align-items-center justify-content-between mb-3">
-    <h4 class="mb-0"><i class="bi bi-calendar-event me-2"></i>Заявки на букинг</h4>
+    <h4 class="mb-0"><i class="bi bi-calendar-event me-2"></i>Заявки на приглашение</h4>
     <div>
         <?php
         $appCountStmt = $db->query("SELECT COUNT(*) FROM booking_applications WHERE status = 'new'");

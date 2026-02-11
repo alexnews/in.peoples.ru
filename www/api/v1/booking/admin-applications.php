@@ -186,7 +186,7 @@ switch ($action) {
         }
 
         if ($app['status'] !== 'approved') {
-            jsonError('Заявка должна быть одобрена (approved) перед добавлением в букинг.', 'VALIDATION_ERROR', 400);
+            jsonError('Заявка должна быть одобрена (approved) перед добавлением в каталог.', 'VALIDATION_ERROR', 400);
         }
 
         if (empty($app['person_id'])) {
@@ -205,7 +205,7 @@ switch ($action) {
         $dChk = $db->prepare('SELECT id FROM booking_persons WHERE person_id = :pid AND category_id = :cid');
         $dChk->execute([':pid' => (int) $app['person_id'], ':cid' => $categoryId]);
         if ($dChk->fetch()) {
-            jsonError('Эта персона уже добавлена в данную категорию букинга.', 'DUPLICATE', 409);
+            jsonError('Эта персона уже добавлена в данную категорию приглашений.', 'DUPLICATE', 409);
         }
 
         // Insert into booking_persons

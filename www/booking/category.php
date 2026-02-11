@@ -94,7 +94,7 @@ header('Content-Type: text/html; charset=UTF-8');
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-0 small">
                 <li class="breadcrumb-item"><a href="https://www.peoples.ru">peoples.ru</a></li>
-                <li class="breadcrumb-item"><a href="/booking/">Букинг</a></li>
+                <li class="breadcrumb-item"><a href="/booking/">Приглашения</a></li>
                 <li class="breadcrumb-item active"><?= htmlspecialchars($catName, ENT_QUOTES, 'UTF-8') ?></li>
             </ol>
         </nav>

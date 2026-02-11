@@ -27,12 +27,12 @@ $stmt = $db->query(
 );
 $categories = fromDbRows($stmt->fetchAll());
 
-$pageTitle = 'Букинг — Категории';
+$pageTitle = 'Приглашения — Категории';
 require_once __DIR__ . '/includes/header.php';
 ?>
 
 <div class="d-flex align-items-center justify-content-between mb-3">
-    <h4 class="mb-0"><i class="bi bi-tags me-2"></i>Категории букинга</h4>
+    <h4 class="mb-0"><i class="bi bi-tags me-2"></i>Категории приглашений</h4>
     <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#categoryModal" onclick="openCategoryModal()">
         <i class="bi bi-plus-lg me-1"></i>Добавить категорию
     </button>

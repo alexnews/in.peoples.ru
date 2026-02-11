@@ -94,7 +94,7 @@ $statusLabels = [
     'spam'      => ['Спам', 'bg-dark'],
 ];
 
-$pageTitle = 'Букинг — Заявки артистов';
+$pageTitle = 'Приглашения — Заявки';
 require_once __DIR__ . '/includes/header.php';
 ?>
 
@@ -236,7 +236,7 @@ require_once __DIR__ . '/includes/header.php';
                     <span class="text-success small"><?= htmlspecialchars($app['person_name'] ?? 'ID ' . $app['person_id'], ENT_QUOTES, 'UTF-8') ?></span>
                 <?php endif; ?>
                 <?php if ($hasBookingLink): ?>
-                    <span class="badge bg-success ms-1">В букинге</span>
+                    <span class="badge bg-success ms-1">В каталоге</span>
                 <?php endif; ?>
             </div>
             <div class="d-flex align-items-center gap-2">
@@ -309,7 +309,7 @@ require_once __DIR__ . '/includes/header.php';
                 <?php if ($st === 'approved' && $hasPersonLink && !$hasBookingLink): ?>
                 <button type="button" class="btn btn-sm btn-success app-add-booking-btn" data-id="<?= (int)$app['id'] ?>"
                         data-category="<?= (int)($app['category_id'] ?? 0) ?>">
-                    <i class="bi bi-plus-circle me-1"></i>Добавить в букинг
+                    <i class="bi bi-plus-circle me-1"></i>Добавить в каталог
                 </button>
                 <?php endif; ?>
             </div>
@@ -369,7 +369,7 @@ require_once __DIR__ . '/includes/header.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Добавить в каталог букинга</h5>
+                <h5 class="modal-title">Добавить в каталог приглашений</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">

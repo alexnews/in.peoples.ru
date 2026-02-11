@@ -193,7 +193,7 @@ $html = <<<HTML
 <html>
 <head><meta charset="utf-8"></head>
 <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-    <h2 style="color: #d92228;">Новая заявка на букинг #{$requestId}</h2>
+    <h2 style="color: #d92228;">Новая заявка на приглашение #{$requestId}</h2>
     <table style="width:100%; border-collapse:collapse;">
         <tr><td style="padding:5px 10px; font-weight:bold;">Имя:</td><td style="padding:5px 10px;">{$clientName}</td></tr>
         <tr><td style="padding:5px 10px; font-weight:bold;">Телефон:</td><td style="padding:5px 10px;">{$clientPhone}</td></tr>
@@ -206,11 +206,11 @@ $html = <<<HTML
     </table>
     <p style="margin-top:15px;"><a href="{$siteUrl}/moderate/booking.php">Открыть панель управления</a></p>
     <hr>
-    <p style="font-size: 12px; color: #888;">peoples.ru — букинг</p>
+    <p style="font-size: 12px; color: #888;">peoples.ru — приглашения</p>
 </body>
 </html>
 HTML;
 
-sendMail($adminEmail, "Новая заявка на букинг #{$requestId}", $html);
+sendMail($adminEmail, "Новая заявка на приглашение #{$requestId}", $html);
 
 jsonSuccess(['message' => 'Заявка успешно отправлена! Мы свяжемся с вами в ближайшее время.', 'request_id' => $requestId], 201);

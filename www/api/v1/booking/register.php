@@ -142,7 +142,7 @@ $html = <<<HTML
 <head><meta charset="utf-8"></head>
 <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
     <h2 style="color: #d92228;">Новая заявка артиста #{$applicationId}</h2>
-    <p>Артист оставил заявку на добавление в каталог букинга.</p>
+    <p>Артист оставил заявку на добавление в каталог приглашений.</p>
     <table style="width:100%; border-collapse:collapse;">
         <tr><td style="padding:5px 10px; font-weight:bold;">Имя:</td><td style="padding:5px 10px;">{$fullName}</td></tr>
         <tr><td style="padding:5px 10px; font-weight:bold;">Телефон:</td><td style="padding:5px 10px;">{$phone}</td></tr>
@@ -152,7 +152,7 @@ $html = <<<HTML
     </table>
     <p style="margin-top:15px;"><a href="{$siteUrl}/moderate/booking-applications.php">Открыть панель управления</a></p>
     <hr>
-    <p style="font-size: 12px; color: #888;">peoples.ru — букинг</p>
+    <p style="font-size: 12px; color: #888;">peoples.ru — приглашения</p>
 </body>
 </html>
 HTML;

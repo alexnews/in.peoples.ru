@@ -175,7 +175,7 @@ header('Content-Type: text/html; charset=UTF-8');
 <footer class="bg-dark text-light py-4 mt-5">
     <div class="container text-center">
         <p class="mb-1"><a href="https://www.peoples.ru" class="text-light text-decoration-none">peoples.ru</a> — Энциклопедия знаменитостей</p>
-        <p class="mb-1"><a href="/booking/" class="text-light text-decoration-none opacity-75">Букинг</a></p>
+        <p class="mb-1"><a href="/booking/" class="text-light text-decoration-none opacity-75">Приглашения</a></p>
         <small class="text-muted">&copy; <?= date('Y') ?> peoples.ru</small>
     </div>
 </footer>

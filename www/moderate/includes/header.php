@@ -109,7 +109,7 @@ $currentPage = basename($_SERVER['SCRIPT_NAME']);
                 </li>
                 <li class="nav-item">
                     <a class="nav-link <?= in_array($currentPage, ['booking.php', 'booking-persons.php', 'booking-categories.php', 'booking-applications.php']) ? 'active' : '' ?>" href="/moderate/booking.php">
-                        <i class="bi bi-calendar-event me-1"></i>Букинг
+                        <i class="bi bi-calendar-event me-1"></i>Приглашения
                         <?php $totalBookingBadge = $newBookingCount + $newApplicationCount; ?>
                         <?php if ($totalBookingBadge > 0): ?>
                             <span class="badge bg-danger ms-1 pending-badge"><?= $totalBookingBadge ?></span>

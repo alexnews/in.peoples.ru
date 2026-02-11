@@ -84,7 +84,7 @@ if (!empty($person['DateIn'])) {
 $pageTitle = "Пригласить {$personName} на мероприятие";
 $pageDesc = $bookingDesc
     ? mb_substr(strip_tags($bookingDesc), 0, 160, 'UTF-8')
-    : "Заказать выступление {$personName} на мероприятии. peoples.ru";
+    : "Пригласить {$personName} на мероприятие. peoples.ru";
 
 // Similar artists (same category)
 $similar = [];
@@ -124,7 +124,7 @@ header('Content-Type: text/html; charset=UTF-8');
     {
         "@context": "https://schema.org",
         "@type": "Service",
-        "name": <?= json_encode("Заказать выступление: {$personName}", JSON_UNESCAPED_UNICODE) ?>,
+        "name": <?= json_encode("Пригласить: {$personName}", JSON_UNESCAPED_UNICODE) ?>,
         "description": <?= json_encode($pageDesc, JSON_UNESCAPED_UNICODE) ?>,
         "provider": {
             "@type": "Organization",
@@ -150,7 +150,7 @@ header('Content-Type: text/html; charset=UTF-8');
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-0 small">
                 <li class="breadcrumb-item"><a href="https://www.peoples.ru">peoples.ru</a></li>
-                <li class="breadcrumb-item"><a href="/booking/">Букинг</a></li>
+                <li class="breadcrumb-item"><a href="/booking/">Приглашения</a></li>
                 <?php if ($categorySlug): ?>
                 <li class="breadcrumb-item"><a href="/booking/category/<?= htmlspecialchars($categorySlug, ENT_QUOTES, 'UTF-8') ?>/"><?= htmlspecialchars($categoryName, ENT_QUOTES, 'UTF-8') ?></a></li>
                 <?php endif; ?>
@@ -248,7 +248,7 @@ header('Content-Type: text/html; charset=UTF-8');
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-8">
-                <h2 class="text-center mb-4">Заказать <?= htmlspecialchars($personName, ENT_QUOTES, 'UTF-8') ?></h2>
+                <h2 class="text-center mb-4">Позвать <?= htmlspecialchars($personName, ENT_QUOTES, 'UTF-8') ?></h2>
                 <div class="booking-form">
                     <form class="booking-request-form">
                         <input type="hidden" name="person_id" value="<?= $personId ?>">

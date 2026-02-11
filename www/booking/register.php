@@ -19,7 +19,7 @@ $catStmt = $db->query(
 );
 $categories = fromDbRows($catStmt->fetchAll());
 
-$pageTitle = 'Заявка — Букинг';
+$pageTitle = 'Заявка — Приглашения';
 $pageDesc = 'Вы — известный человек? Спортсмен, писатель, музыкант? Оставьте заявку и мы добавим вас в каталог peoples.ru';
 
 header('Content-Type: text/html; charset=UTF-8');
@@ -122,7 +122,7 @@ header('Content-Type: text/html; charset=UTF-8');
                 <div class="step">
                     <div class="step-number">3</div>
                     <h5>Добавим в каталог</h5>
-                    <p>Ваш профиль появится в каталоге букинга, и клиенты смогут вас найти.</p>
+                    <p>Ваш профиль появится в каталоге приглашений, и клиенты смогут вас найти.</p>
                 </div>
             </div>
         </div>
@@ -133,7 +133,7 @@ header('Content-Type: text/html; charset=UTF-8');
 <footer class="bg-dark text-light py-4 mt-5">
     <div class="container text-center">
         <p class="mb-1"><a href="https://www.peoples.ru" class="text-light text-decoration-none">peoples.ru</a> — Энциклопедия знаменитостей</p>
-        <p class="mb-1"><a href="/booking/" class="text-light text-decoration-none opacity-75">Каталог букинга</a></p>
+        <p class="mb-1"><a href="/booking/" class="text-light text-decoration-none opacity-75">Каталог приглашений</a></p>
         <small class="text-muted">&copy; <?= date('Y') ?> peoples.ru</small>
     </div>
 </footer>

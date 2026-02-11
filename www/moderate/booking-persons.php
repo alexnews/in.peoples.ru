@@ -71,12 +71,12 @@ $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
 $stmt->execute();
 $persons = fromDbRows($stmt->fetchAll());
 
-$pageTitle = 'Букинг — Персоны';
+$pageTitle = 'Приглашения — Персоны';
 require_once __DIR__ . '/includes/header.php';
 ?>
 
 <div class="d-flex align-items-center justify-content-between mb-3">
-    <h4 class="mb-0"><i class="bi bi-people me-2"></i>Персоны букинга <span class="text-muted fs-6">(<?= $total ?>)</span></h4>
+    <h4 class="mb-0"><i class="bi bi-people me-2"></i>Персоны приглашений <span class="text-muted fs-6">(<?= $total ?>)</span></h4>
     <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#personModal" onclick="openPersonModal()">
         <i class="bi bi-plus-lg me-1"></i>Добавить персону
     </button>
@@ -126,7 +126,7 @@ require_once __DIR__ . '/includes/header.php';
     <div class="card card-mod">
         <div class="card-body text-center py-5 text-muted">
             <i class="bi bi-people" style="font-size: 3rem;"></i>
-            <p class="mt-3 mb-0">Персон для букинга не найдено.</p>
+            <p class="mt-3 mb-0">Персон для приглашений не найдено.</p>
         </div>
     </div>
 <?php else: ?>
@@ -517,7 +517,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Remove
     document.querySelectorAll('.remove-bp-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
-            if (!confirm('Удалить "' + this.dataset.name + '" из букинга?')) return;
+            if (!confirm('Удалить "' + this.dataset.name + '" из приглашений?')) return;
             fetch('/api/v1/booking/admin-persons.php', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
