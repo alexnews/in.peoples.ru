@@ -43,6 +43,10 @@ $newApplicationCount = (int) $appBadgeStmt->fetchColumn();
 $infoChangeBadgeStmt = $db->query("SELECT COUNT(*) FROM user_info_change_requests WHERE status = 'new'");
 $newInfoChangeCount = (int) $infoChangeBadgeStmt->fetchColumn();
 
+// New ad requests count
+$adBadgeStmt = $db->query("SELECT COUNT(*) FROM user_ad_requests WHERE status = 'new'");
+$newAdCount = (int) $adBadgeStmt->fetchColumn();
+
 $pageTitle = $pageTitle ?? 'Модерация';
 $currentPage = basename($_SERVER['SCRIPT_NAME']);
 ?>
@@ -117,6 +121,14 @@ $currentPage = basename($_SERVER['SCRIPT_NAME']);
                         <i class="bi bi-pencil-square me-1"></i>Инфо
                         <?php if ($newInfoChangeCount > 0): ?>
                             <span class="badge bg-danger ms-1 pending-badge"><?= $newInfoChangeCount ?></span>
+                        <?php endif; ?>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= $currentPage === 'ad-requests.php' ? 'active' : '' ?>" href="/moderate/ad-requests.php">
+                        <i class="bi bi-megaphone me-1"></i>Реклама
+                        <?php if ($newAdCount > 0): ?>
+                            <span class="badge bg-danger ms-1 pending-badge"><?= $newAdCount ?></span>
                         <?php endif; ?>
                     </a>
                 </li>

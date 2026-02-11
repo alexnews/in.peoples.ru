@@ -370,6 +370,80 @@
     });
 
     // ========================================================================
+    // Advertising request form
+    // ========================================================================
+
+    var advForms = document.querySelectorAll('.adv-request-form');
+
+    advForms.forEach(function (form) {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            var submitBtn = form.querySelector('[type="submit"]');
+            var resultDiv = form.querySelector('.form-result');
+
+            // Get selected ad_type from radio buttons
+            var adTypeRadio = form.querySelector('[name="ad_type"]:checked');
+
+            var data = {
+                ad_type: adTypeRadio ? adTypeRadio.value : 'other',
+                company_name: (form.querySelector('[name="company_name"]')?.value || '').trim(),
+                message: (form.querySelector('[name="message"]')?.value || '').trim(),
+                budget: (form.querySelector('[name="budget"]')?.value || '').trim(),
+                contact_name: (form.querySelector('[name="contact_name"]')?.value || '').trim(),
+                contact_phone: (form.querySelector('[name="contact_phone"]')?.value || '').trim(),
+                contact_email: (form.querySelector('[name="contact_email"]')?.value || '').trim(),
+                website: form.querySelector('[name="website"]')?.value || '',
+                bot_token: botToken
+            };
+
+            // Client-side validation
+            var errors = [];
+            if (!data.contact_name || data.contact_name.length < 2) {
+                errors.push('Укажите ваше имя');
+            }
+            if (!data.contact_phone || data.contact_phone.length < 6) {
+                errors.push('Укажите номер телефона');
+            }
+            if (!data.message || data.message.length < 10) {
+                errors.push('Опишите ваш запрос (минимум 10 символов)');
+            }
+
+            if (errors.length) {
+                showFormResult(resultDiv, errors.join('. '), 'danger');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            var origText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Отправка...';
+
+            fetch('/api/v1/adv/submit.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+                .then(function (r) { return r.json(); })
+                .then(function (result) {
+                    if (result.success) {
+                        showFormResult(resultDiv, result.data.message, 'success');
+                        form.reset();
+                    } else {
+                        var msg = result.error?.message || 'Произошла ошибка. Попробуйте позже.';
+                        showFormResult(resultDiv, msg, 'danger');
+                    }
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = origText;
+                })
+                .catch(function () {
+                    showFormResult(resultDiv, 'Ошибка сети. Проверьте соединение и попробуйте снова.', 'danger');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = origText;
+                });
+        });
+    });
+
+    // ========================================================================
     // Helpers
     // ========================================================================
 
