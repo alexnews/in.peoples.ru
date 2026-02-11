@@ -16,7 +16,7 @@ $db = getDb();
 $personId = (int) ($_GET['id'] ?? 0);
 if ($personId <= 0) {
     http_response_code(404);
-    echo '404 — Артист не найден';
+    echo '404 — Не найдено';
     exit;
 }
 
@@ -46,7 +46,7 @@ $person = $pStmt->fetch();
 
 if (!$person) {
     http_response_code(404);
-    echo '404 — Артист не найден';
+    echo '404 — Не найдено';
     exit;
 }
 $person = fromDbArray($person);
@@ -205,12 +205,12 @@ header('Content-Type: text/html; charset=UTF-8');
 
                 <div class="mt-3 d-flex gap-2">
                     <a href="#booking-form" class="btn btn-brand">
-                        <i class="bi bi-envelope me-1"></i>Заказать выступление
+                        <i class="bi bi-envelope me-1"></i>Пригласить
                     </a>
                     <?php if ($personPath): ?>
-                    <a href="<?= htmlspecialchars($personPath, ENT_QUOTES, 'UTF-8') ?>"
+                    <a href="https://www.peoples.ru/<?= htmlspecialchars($personPath, ENT_QUOTES, 'UTF-8') ?>"
                        class="btn btn-outline-secondary" target="_blank" rel="noopener">
-                        <i class="bi bi-person me-1"></i>Биография
+                        <i class="bi bi-person-lines-fill me-1"></i>Профиль на peoples.ru
                     </a>
                     <?php endif; ?>
                 </div>
@@ -346,8 +346,13 @@ header('Content-Type: text/html; charset=UTF-8');
                         <div class="price-badge">от <?= number_format((int)$s['price_from'], 0, '', ' ') ?> &#8381;</div>
                         <?php endif; ?>
                     </div>
-                    <div class="card-footer">
-                        <a href="/booking/person/<?= (int)$s['person_id'] ?>/" class="btn btn-sm btn-brand w-100">Подробнее</a>
+                    <div class="card-footer d-flex gap-2">
+                        <?php if (!empty($s['AllUrlInSity'])): ?>
+                        <a href="https://www.peoples.ru/<?= htmlspecialchars($s['AllUrlInSity'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" class="btn btn-sm btn-outline-secondary flex-fill" title="Профиль на peoples.ru">
+                            <i class="bi bi-person-lines-fill me-1"></i>Профиль
+                        </a>
+                        <?php endif; ?>
+                        <a href="/booking/person/<?= (int)$s['person_id'] ?>/" class="btn btn-sm btn-brand flex-fill">Пригласить</a>
                     </div>
                 </div>
             </div>
