@@ -134,7 +134,7 @@ header('Content-Type: text/html; charset=UTF-8');
                 <div class="col-6 col-md-4">
                     <div class="booking-card">
                         <?php if (!empty($p['NamePhoto'])): ?>
-                            <img src="https://www.peoples.ru/<?= htmlspecialchars($p['NamePhoto'], ENT_QUOTES, 'UTF-8') ?>"
+                            <img src="<?= htmlspecialchars(($p['AllUrlInSity'] ?? '') . $p['NamePhoto'], ENT_QUOTES, 'UTF-8') ?>"
                                  class="card-img-top" alt="<?= htmlspecialchars($p['FullNameRus'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
                         <?php else: ?>
                             <div class="card-img-placeholder"><i class="bi bi-person"></i></div>

@@ -148,7 +148,7 @@ require_once __DIR__ . '/includes/header.php';
                 <tr id="bp-row-<?= (int)$p['id'] ?>">
                     <td>
                         <?php if (!empty($p['NamePhoto'])): ?>
-                            <img src="https://www.peoples.ru/<?= htmlspecialchars($p['NamePhoto'], ENT_QUOTES, 'UTF-8') ?>"
+                            <img src="<?= htmlspecialchars(($p['AllUrlInSity'] ?? '') . $p['NamePhoto'], ENT_QUOTES, 'UTF-8') ?>"
                                  alt="" style="width:40px;height:50px;object-fit:cover;border-radius:4px;">
                         <?php else: ?>
                             <div style="width:40px;height:50px;background:#eee;border-radius:4px;" class="d-flex align-items-center justify-content-center">

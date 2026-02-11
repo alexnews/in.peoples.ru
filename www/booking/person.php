@@ -90,7 +90,7 @@ $similar = [];
 if ($primary) {
     $simStmt = $db->prepare(
         'SELECT bp.person_id, bp.price_from,
-                p.FullNameRus, p.NamePhoto, p.famous_for,
+                p.FullNameRus, p.NamePhoto, p.AllUrlInSity, p.famous_for,
                 c.name AS category_name
          FROM booking_persons bp
          INNER JOIN persons p ON p.Persons_id = bp.person_id
@@ -165,7 +165,7 @@ header('Content-Type: text/html; charset=UTF-8');
         <div class="row align-items-center">
             <div class="col-auto">
                 <?php if (!empty($personPhoto)): ?>
-                    <img src="https://www.peoples.ru/<?= htmlspecialchars($personPhoto, ENT_QUOTES, 'UTF-8') ?>"
+                    <img src="<?= htmlspecialchars($personPath . $personPhoto, ENT_QUOTES, 'UTF-8') ?>"
                          class="person-photo" alt="<?= htmlspecialchars($personName, ENT_QUOTES, 'UTF-8') ?>">
                 <?php else: ?>
                     <div class="person-photo-placeholder"><i class="bi bi-person"></i></div>
@@ -208,7 +208,7 @@ header('Content-Type: text/html; charset=UTF-8');
                         <i class="bi bi-envelope me-1"></i>Заказать выступление
                     </a>
                     <?php if ($personPath): ?>
-                    <a href="https://www.peoples.ru<?= htmlspecialchars($personPath, ENT_QUOTES, 'UTF-8') ?>"
+                    <a href="<?= htmlspecialchars($personPath, ENT_QUOTES, 'UTF-8') ?>"
                        class="btn btn-outline-secondary" target="_blank" rel="noopener">
                         <i class="bi bi-person me-1"></i>Биография
                     </a>
@@ -334,7 +334,7 @@ header('Content-Type: text/html; charset=UTF-8');
             <div class="col-6 col-md-3">
                 <div class="booking-card">
                     <?php if (!empty($s['NamePhoto'])): ?>
-                        <img src="https://www.peoples.ru/<?= htmlspecialchars($s['NamePhoto'], ENT_QUOTES, 'UTF-8') ?>"
+                        <img src="<?= htmlspecialchars(($s['AllUrlInSity'] ?? '') . $s['NamePhoto'], ENT_QUOTES, 'UTF-8') ?>"
                              class="card-img-top" alt="<?= htmlspecialchars($s['FullNameRus'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
                     <?php else: ?>
                         <div class="card-img-placeholder"><i class="bi bi-person"></i></div>
