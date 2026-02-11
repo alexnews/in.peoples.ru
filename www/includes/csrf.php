@@ -5,22 +5,40 @@ declare(strict_types=1);
 /**
  * CSRF protection helpers.
  *
- * Generates and validates tokens stored in PHP's native $_SESSION.
- * Tokens can be submitted via a hidden form field or the X-CSRF-Token HTTP header.
+ * Primary method: HMAC-based token derived from the user's DB session ID.
+ * No server-side storage needed — works as long as the user is authenticated.
  *
- * Note: This uses PHP's built-in session mechanism ($_SESSION) purely for CSRF
- * token storage. User authentication is handled separately via the user_sessions
- * database table and the peoples_session cookie.
+ * Fallback: PHP native $_SESSION for non-authenticated pages (if any).
  */
 
-/** CSRF token session key */
+/** CSRF token session key (fallback) */
 define('CSRF_SESSION_KEY', '_csrf_token');
 
-/** CSRF token length in bytes (64 hex characters) */
+/** CSRF token length in bytes (fallback) */
 define('CSRF_TOKEN_BYTES', 32);
 
+/** HMAC key for deriving CSRF tokens from session IDs */
+define('CSRF_HMAC_KEY', 'peoples_csrf_hmac_2025');
+
 /**
- * Ensure PHP session is started for CSRF storage.
+ * Derive a CSRF token from the user's authenticated session cookie.
+ *
+ * Returns null if no session cookie is present.
+ *
+ * @return string|null HMAC-based token, or null if not authenticated
+ */
+function deriveSessionCsrfToken(): ?string
+{
+    $sessionId = $_COOKIE[SESSION_COOKIE_NAME] ?? '';
+    if ($sessionId === '') {
+        return null;
+    }
+
+    return hash_hmac('sha256', $sessionId, CSRF_HMAC_KEY);
+}
+
+/**
+ * Ensure PHP session is started for CSRF storage (fallback).
  *
  * @return void
  */
@@ -40,15 +58,22 @@ function ensurePhpSession(): void
 }
 
 /**
- * Generate a new CSRF token and store it in the PHP session.
+ * Generate a CSRF token.
  *
- * If a token already exists in the session, it is returned instead of
- * generating a new one (one token per session for simplicity).
+ * For authenticated users: derives token from their session cookie (no storage needed).
+ * For anonymous users: falls back to PHP native session storage.
  *
  * @return string The CSRF token (hex string)
  */
 function generateCsrfToken(): string
 {
+    // Primary: HMAC-based token from authenticated session
+    $hmacToken = deriveSessionCsrfToken();
+    if ($hmacToken !== null) {
+        return $hmacToken;
+    }
+
+    // Fallback: PHP native session
     ensurePhpSession();
 
     if (!empty($_SESSION[CSRF_SESSION_KEY])) {
@@ -62,24 +87,17 @@ function generateCsrfToken(): string
 }
 
 /**
- * Validate a CSRF token against the stored session token.
+ * Validate a CSRF token.
  *
  * Checks the provided token first. If null, falls back to the X-CSRF-Token
- * HTTP header.
+ * HTTP header. Validates against HMAC-derived token (primary) and PHP session
+ * token (fallback).
  *
  * @param string|null $token Token from form submission (or null to check header)
  * @return bool True if the token matches, false otherwise
  */
 function validateCsrfToken(?string $token = null): bool
 {
-    ensurePhpSession();
-
-    $storedToken = $_SESSION[CSRF_SESSION_KEY] ?? null;
-
-    if ($storedToken === null || $storedToken === '') {
-        return false;
-    }
-
     // If no token argument provided, try the HTTP header
     if ($token === null || $token === '') {
         $token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
@@ -89,7 +107,20 @@ function validateCsrfToken(?string $token = null): bool
         return false;
     }
 
-    return hash_equals($storedToken, $token);
+    // Primary: HMAC-based validation (for authenticated users)
+    $hmacToken = deriveSessionCsrfToken();
+    if ($hmacToken !== null && hash_equals($hmacToken, $token)) {
+        return true;
+    }
+
+    // Fallback: PHP native session validation
+    ensurePhpSession();
+    $storedToken = $_SESSION[CSRF_SESSION_KEY] ?? null;
+    if ($storedToken !== null && $storedToken !== '' && hash_equals($storedToken, $token)) {
+        return true;
+    }
+
+    return false;
 }
 
 /**
