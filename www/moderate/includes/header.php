@@ -47,6 +47,10 @@ $newInfoChangeCount = (int) $infoChangeBadgeStmt->fetchColumn();
 $adBadgeStmt = $db->query("SELECT COUNT(*) FROM user_ad_requests WHERE status = 'new'");
 $newAdCount = (int) $adBadgeStmt->fetchColumn();
 
+// Pending fan club members count
+$fanBadgeStmt = $db->query("SELECT COUNT(*) FROM user_fan_club_members WHERE status = 'pending'");
+$newFanCount = (int) $fanBadgeStmt->fetchColumn();
+
 $pageTitle = $pageTitle ?? 'Модерация';
 $currentPage = basename($_SERVER['SCRIPT_NAME']);
 ?>
@@ -129,6 +133,14 @@ $currentPage = basename($_SERVER['SCRIPT_NAME']);
                         <i class="bi bi-megaphone me-1"></i>Реклама
                         <?php if ($newAdCount > 0): ?>
                             <span class="badge bg-danger ms-1 pending-badge"><?= $newAdCount ?></span>
+                        <?php endif; ?>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= $currentPage === 'fan-clubs.php' ? 'active' : '' ?>" href="/moderate/fan-clubs.php">
+                        <i class="bi bi-heart me-1"></i>Фан-клубы
+                        <?php if ($newFanCount > 0): ?>
+                            <span class="badge bg-danger ms-1 pending-badge"><?= $newFanCount ?></span>
                         <?php endif; ?>
                     </a>
                 </li>

@@ -13,11 +13,26 @@ require_once __DIR__ . '/../includes/encoding.php';
 
 $db = getDb();
 
-$personId = (int) ($_GET['id'] ?? 0);
-if ($personId <= 0) {
+// Accept slug (path-based or numeric ID)
+$slug = trim($_GET['slug'] ?? $_GET['id'] ?? '');
+if ($slug === '') {
     http_response_code(404);
     echo '404 — Не найдено';
     exit;
+}
+
+// Resolve person ID: numeric → lookup by Persons_id, string → lookup by persons.path
+if (ctype_digit($slug)) {
+    $personId = (int) $slug;
+} else {
+    $pathStmt = $db->prepare('SELECT Persons_id FROM persons WHERE path = :path LIMIT 1');
+    $pathStmt->execute([':path' => toDb($slug)]);
+    $personId = (int) $pathStmt->fetchColumn();
+    if ($personId <= 0) {
+        http_response_code(404);
+        echo '404 — Не найдено';
+        exit;
+    }
 }
 
 // Fetch booking person(s) — may be in multiple categories
@@ -37,7 +52,7 @@ $bookingEntries = fromDbRows($bpStmt->fetchAll());
 // Fetch person from main table regardless (to show even if not in booking_persons yet)
 $pStmt = $db->prepare(
     'SELECT Persons_id, FullNameRus, FullNameEngl, NamePhoto, AllUrlInSity,
-            DateIn, DateOut, Epigraph, famous_for, gender
+            DateIn, DateOut, Epigraph, famous_for, gender, path
      FROM persons
      WHERE Persons_id = :pid'
 );
@@ -50,6 +65,13 @@ if (!$person) {
     exit;
 }
 $person = fromDbArray($person);
+
+// 301 redirect from numeric ID to path-based URL
+$personSlug = $person['path'] ?? '';
+if ($personSlug !== '' && ctype_digit($slug)) {
+    header('Location: /booking/person/' . $personSlug . '/', true, 301);
+    exit;
+}
 
 // Use first booking entry as primary
 $primary = !empty($bookingEntries) ? $bookingEntries[0] : null;
@@ -85,13 +107,16 @@ $pageTitle = "Пригласить {$personName} на мероприятие";
 $pageDesc = $bookingDesc
     ? mb_substr(strip_tags($bookingDesc), 0, 160, 'UTF-8')
     : "Пригласить {$personName} на мероприятие. peoples.ru";
+$canonicalSlug = $personSlug !== '' ? $personSlug : (string)$personId;
+$canonicalUrl = 'https://in.peoples.ru/booking/person/' . $canonicalSlug . '/';
+$ogImage = !empty($personPhoto) ? ($personPath . $personPhoto) : 'https://www.peoples.ru/img/og-default.jpg';
 
 // Similar artists (same category)
 $similar = [];
 if ($primary) {
     $simStmt = $db->prepare(
         'SELECT bp.person_id, bp.price_from,
-                p.FullNameRus, p.NamePhoto, p.AllUrlInSity, p.famous_for,
+                p.FullNameRus, p.NamePhoto, p.AllUrlInSity, p.famous_for, p.path,
                 c.name AS category_name
          FROM booking_persons bp
          INNER JOIN persons p ON p.Persons_id = bp.person_id
@@ -115,9 +140,21 @@ header('Content-Type: text/html; charset=UTF-8');
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?> — peoples.ru</title>
     <meta name="description" content="<?= htmlspecialchars($pageDesc, ENT_QUOTES, 'UTF-8') ?>">
     <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+    <link rel="canonical" href="<?= htmlspecialchars($canonicalUrl, ENT_QUOTES, 'UTF-8') ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="/assets/css/booking.css" rel="stylesheet">
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="<?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?>">
+    <meta property="og:description" content="<?= htmlspecialchars($pageDesc, ENT_QUOTES, 'UTF-8') ?>">
+    <meta property="og:url" content="<?= htmlspecialchars($canonicalUrl, ENT_QUOTES, 'UTF-8') ?>">
+    <meta property="og:site_name" content="peoples.ru">
+    <meta property="og:locale" content="ru_RU">
+    <meta property="og:image" content="<?= htmlspecialchars($ogImage, ENT_QUOTES, 'UTF-8') ?>">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?>">
+    <meta name="twitter:description" content="<?= htmlspecialchars($pageDesc, ENT_QUOTES, 'UTF-8') ?>">
 
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
@@ -139,6 +176,36 @@ header('Content-Type: text/html; charset=UTF-8');
             "availability": "https://schema.org/InStock"
         }
         <?php endif; ?>
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": <?= json_encode($personName, JSON_UNESCAPED_UNICODE) ?>,
+        "url": <?= json_encode($canonicalUrl, JSON_UNESCAPED_UNICODE) ?>
+        <?php if (!empty($personPhoto)): ?>
+        ,"image": <?= json_encode($personPath . $personPhoto, JSON_UNESCAPED_UNICODE) ?>
+        <?php endif; ?>
+        <?php if ($famousFor): ?>
+        ,"description": <?= json_encode($famousFor, JSON_UNESCAPED_UNICODE) ?>
+        <?php endif; ?>
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "peoples.ru", "item": "https://www.peoples.ru"},
+            {"@type": "ListItem", "position": 2, "name": "Приглашения", "item": "https://in.peoples.ru/booking/"}
+            <?php if ($categorySlug): ?>
+            ,{"@type": "ListItem", "position": 3, "name": <?= json_encode($categoryName, JSON_UNESCAPED_UNICODE) ?>, "item": <?= json_encode("https://in.peoples.ru/booking/category/{$categorySlug}/", JSON_UNESCAPED_UNICODE) ?>}
+            ,{"@type": "ListItem", "position": 4, "name": <?= json_encode($personName, JSON_UNESCAPED_UNICODE) ?>, "item": <?= json_encode($canonicalUrl, JSON_UNESCAPED_UNICODE) ?>}
+            <?php else: ?>
+            ,{"@type": "ListItem", "position": 3, "name": <?= json_encode($personName, JSON_UNESCAPED_UNICODE) ?>, "item": <?= json_encode($canonicalUrl, JSON_UNESCAPED_UNICODE) ?>}
+            <?php endif; ?>
+        ]
     }
     </script>
 </head>
@@ -363,7 +430,7 @@ header('Content-Type: text/html; charset=UTF-8');
                             <i class="bi bi-person-lines-fill me-1"></i>Профиль
                         </a>
                         <?php endif; ?>
-                        <a href="/booking/person/<?= (int)$s['person_id'] ?>/" class="btn btn-sm btn-brand flex-fill">Пригласить</a>
+                        <a href="/booking/person/<?= htmlspecialchars(!empty($s['path']) ? $s['path'] : (string)(int)$s['person_id'], ENT_QUOTES, 'UTF-8') ?>/" class="btn btn-sm btn-brand flex-fill">Пригласить</a>
                     </div>
                 </div>
             </div>

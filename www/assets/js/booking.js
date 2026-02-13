@@ -46,7 +46,8 @@
 
                         var html = '';
                         data.data.forEach(function (p) {
-                            html += '<a href="/booking/person/' + p.id + '/" ' +
+                            var personSlug = p.slug || p.id;
+                            html += '<a href="/booking/person/' + encodeURIComponent(personSlug) + '/" ' +
                                 'class="list-group-item list-group-item-action d-flex align-items-center py-2">' +
                                 '<strong class="me-2">' + escapeHtml(p.name || '') + '</strong>' +
                                 '<small class="text-muted">' + escapeHtml(p.famous_for || '') + '</small>' +
@@ -428,6 +429,76 @@
                     if (result.success) {
                         showFormResult(resultDiv, result.data.message, 'success');
                         form.reset();
+                    } else {
+                        var msg = result.error?.message || 'Произошла ошибка. Попробуйте позже.';
+                        showFormResult(resultDiv, msg, 'danger');
+                    }
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = origText;
+                })
+                .catch(function () {
+                    showFormResult(resultDiv, 'Ошибка сети. Проверьте соединение и попробуйте снова.', 'danger');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = origText;
+                });
+        });
+    });
+
+    // ========================================================================
+    // Fan club join form
+    // ========================================================================
+
+    var fanForms = document.querySelectorAll('.fan-join-form');
+
+    fanForms.forEach(function (form) {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            var submitBtn = form.querySelector('[type="submit"]');
+            var resultDiv = form.querySelector('.form-result');
+
+            var data = {
+                person_id: form.querySelector('[name="person_id"]')?.value || null,
+                name: (form.querySelector('[name="name"]')?.value || '').trim(),
+                email: (form.querySelector('[name="email"]')?.value || '').trim(),
+                message: (form.querySelector('[name="message"]')?.value || '').trim(),
+                website: form.querySelector('[name="website"]')?.value || '',
+                bot_token: botToken
+            };
+
+            // Client-side validation
+            var errors = [];
+            if (!data.name || data.name.length < 2) {
+                errors.push('Укажите ваше имя');
+            }
+            if (!data.email || !data.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                errors.push('Укажите корректный email');
+            }
+
+            if (errors.length) {
+                showFormResult(resultDiv, errors.join('. '), 'danger');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            var origText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Отправка...';
+
+            fetch('/api/v1/fan/join.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+                .then(function (r) { return r.json(); })
+                .then(function (result) {
+                    if (result.success) {
+                        showFormResult(resultDiv, result.data.message, 'success');
+                        form.reset();
+                        // Re-set hidden person_id
+                        if (data.person_id) {
+                            var pidField = form.querySelector('[name="person_id"]');
+                            if (pidField) pidField.value = data.person_id;
+                        }
                     } else {
                         var msg = result.error?.message || 'Произошла ошибка. Попробуйте позже.';
                         showFormResult(resultDiv, msg, 'danger');

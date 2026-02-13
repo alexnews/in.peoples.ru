@@ -14,6 +14,15 @@ AddCharset UTF-8 .js .css .html
 RewriteCond %{HTTP_USER_AGENT} (Mediatoolkitbot|PetalBot|ClaudeBot|GPTBot|Bytespider|AhrefsBot|SemrushBot) [NC]
 RewriteRule .* - [F,L]
 
+# Sitemap
+RewriteRule ^sitemap\.xml$ sitemap.php [L]
+
+# Trailing slash enforcement for public pages
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_URI} !/$
+RewriteCond %{REQUEST_URI} !\.
+RewriteRule ^(booking|adv|info-change|fan)(.*)$ /$1$2/ [R=301,L]
+
 # Pass through real files and directories
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d

@@ -6,8 +6,9 @@ RewriteRule ^$ index.php [L]
 # /booking/category/{slug}/ → category.php?slug={slug}
 RewriteRule ^category/([a-z0-9-]+)/?$ category.php?slug=$1 [L,QSA]
 
-# /booking/person/{id}/ → person.php?id={id}
-RewriteRule ^person/(\d+)/?$ person.php?id=$1 [L,QSA]
+# /booking/person/{slug}/ → person.php?slug={slug}
+# Handles both path-based slugs and legacy numeric IDs (PHP resolves)
+RewriteRule ^person/([a-zA-Z0-9_-]+)/?$ person.php?slug=$1 [L,QSA]
 
 # /booking/register/ → register.php
 RewriteRule ^register/?$ register.php [L,QSA]

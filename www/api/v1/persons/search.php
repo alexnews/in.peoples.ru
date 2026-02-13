@@ -58,7 +58,7 @@ if (empty($results)) {
     $stmt = $db->prepare(
         'SELECT Persons_id AS id, FullNameRus, FullNameEngl,
                 DateIn, DateOut, NamePhoto, famous_for, AllUrlInSity,
-                Epigraph, popularity AS pop
+                Epigraph, popularity AS pop, path
          FROM persons
          WHERE FullNameRus LIKE :q1 OR SurNameRus LIKE :q2 OR NameEngl LIKE :q3
          ORDER BY popularity DESC
@@ -82,10 +82,13 @@ foreach ($results as $row) {
     $path = fromDb($row['AllUrlInSity'] ?? $row['path'] ?? '');
     $epigraph = fromDb($row['Epigraph'] ?? '');
 
+    $slug = fromDb($row['path'] ?? '');
+
     $output[] = [
         'id'         => (int) $row['id'],
         'name'       => $name,
         'name_eng'   => $nameEng,
+        'slug'       => $slug,
         'dates'      => [
             'birth' => fromDb($row['DateIn'] ?? ''),
             'death' => fromDb($row['DateOut'] ?? ''),

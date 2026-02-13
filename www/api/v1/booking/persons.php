@@ -82,7 +82,7 @@ $total = (int) $countStmt->fetchColumn();
 $sql = "SELECT bp.id AS booking_person_id, bp.person_id, bp.price_from, bp.price_to,
                bp.short_desc, bp.is_featured, bp.sort_order,
                p.FullNameRus, p.FullNameEngl, p.NamePhoto, p.AllUrlInSity,
-               p.DateIn, p.Epigraph, p.famous_for,
+               p.DateIn, p.Epigraph, p.famous_for, p.path,
                c.id AS category_id, c.name AS category_name, c.slug AS category_slug
         FROM booking_persons bp
         INNER JOIN persons p ON p.Persons_id = bp.person_id
@@ -108,6 +108,7 @@ foreach ($rows as $row) {
         'person_id'         => (int) $row['person_id'],
         'name'              => fromDb($row['FullNameRus']),
         'name_eng'          => fromDb($row['FullNameEngl']),
+        'slug'              => fromDb($row['path']),
         'photo'             => fromDb($row['NamePhoto']),
         'path'              => fromDb($row['AllUrlInSity']),
         'birth_date'        => fromDb($row['DateIn']),

@@ -30,7 +30,7 @@ $featStmt = $db->query(
     'SELECT bp.id AS booking_person_id, bp.person_id, bp.price_from, bp.price_to,
             bp.short_desc, bp.is_featured,
             p.FullNameRus, p.FullNameEngl, p.NamePhoto, p.AllUrlInSity,
-            p.Epigraph, p.famous_for,
+            p.Epigraph, p.famous_for, p.path,
             c.name AS category_name, c.slug AS category_slug
      FROM booking_persons bp
      INNER JOIN persons p ON p.Persons_id = bp.person_id
@@ -54,9 +54,43 @@ header('Content-Type: text/html; charset=UTF-8');
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?> — peoples.ru</title>
     <meta name="description" content="<?= htmlspecialchars($pageDesc, ENT_QUOTES, 'UTF-8') ?>">
     <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+    <link rel="canonical" href="https://in.peoples.ru/booking/">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="/assets/css/booking.css" rel="stylesheet">
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="<?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?>">
+    <meta property="og:description" content="<?= htmlspecialchars($pageDesc, ENT_QUOTES, 'UTF-8') ?>">
+    <meta property="og:url" content="https://in.peoples.ru/booking/">
+    <meta property="og:site_name" content="peoples.ru">
+    <meta property="og:locale" content="ru_RU">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?>">
+    <meta name="twitter:description" content="<?= htmlspecialchars($pageDesc, ENT_QUOTES, 'UTF-8') ?>">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "peoples.ru",
+        "url": "https://www.peoples.ru",
+        "description": <?= json_encode($pageDesc, JSON_UNESCAPED_UNICODE) ?>
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "peoples.ru — Приглашения",
+        "url": "https://in.peoples.ru/booking/",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://in.peoples.ru/booking/?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+        }
+    }
+    </script>
 </head>
 <body>
 
@@ -131,7 +165,7 @@ header('Content-Type: text/html; charset=UTF-8');
                             <i class="bi bi-person-lines-fill me-1"></i>Профиль
                         </a>
                         <?php endif; ?>
-                        <a href="/booking/person/<?= (int)$fp['person_id'] ?>/#booking-form" class="btn btn-sm btn-brand flex-fill">Пригласить</a>
+                        <a href="/booking/person/<?= htmlspecialchars(!empty($fp['path']) ? $fp['path'] : (string)(int)$fp['person_id'], ENT_QUOTES, 'UTF-8') ?>/#booking-form" class="btn btn-sm btn-brand flex-fill">Пригласить</a>
                     </div>
                 </div>
             </div>

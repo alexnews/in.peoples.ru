@@ -1,0 +1,27 @@
+User-Agent: *
+Allow: /booking/
+Allow: /fan/
+Allow: /adv/
+Allow: /info-change/
+Disallow: /api/
+Disallow: /user/
+Disallow: /moderate/
+Disallow: /uploads/
+
+User-Agent: GPTBot
+Allow: /booking/
+Allow: /fan/
+Disallow: /
+
+User-Agent: ClaudeBot
+Allow: /booking/
+Allow: /fan/
+Disallow: /
+
+User-Agent: Applebot-Extended
+Allow: /booking/
+Allow: /fan/
+Disallow: /
+
+Sitemap: https://in.peoples.ru/sitemap.xml
+Host: in.peoples.ru

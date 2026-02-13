@@ -54,7 +54,7 @@ $totalPages = $perPage > 0 ? (int) ceil($total / $perPage) : 0;
 $sql = 'SELECT bp.id AS booking_person_id, bp.person_id, bp.price_from, bp.price_to,
                bp.short_desc, bp.is_featured,
                p.FullNameRus, p.FullNameEngl, p.NamePhoto, p.AllUrlInSity,
-               p.famous_for
+               p.famous_for, p.path
         FROM booking_persons bp
         INNER JOIN persons p ON p.Persons_id = bp.person_id
         WHERE bp.category_id = :cid AND bp.is_active = 1 AND p.DateOut IS NULL
@@ -71,6 +71,7 @@ $persons = fromDbRows($stmt->fetchAll());
 $catName = $category['name'];
 $pageTitle = "Пригласить — {$catName}";
 $pageDesc = $category['description'] ?? "Закажите выступление: {$catName} на мероприятии. peoples.ru";
+$canonicalUrl = 'https://in.peoples.ru/booking/category/' . htmlspecialchars($category['slug'], ENT_QUOTES, 'UTF-8') . '/';
 
 header('Content-Type: text/html; charset=UTF-8');
 ?>
@@ -82,9 +83,32 @@ header('Content-Type: text/html; charset=UTF-8');
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?> — peoples.ru</title>
     <meta name="description" content="<?= htmlspecialchars($pageDesc, ENT_QUOTES, 'UTF-8') ?>">
     <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+    <link rel="canonical" href="<?= $canonicalUrl ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="/assets/css/booking.css" rel="stylesheet">
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="<?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?>">
+    <meta property="og:description" content="<?= htmlspecialchars($pageDesc, ENT_QUOTES, 'UTF-8') ?>">
+    <meta property="og:url" content="<?= $canonicalUrl ?>">
+    <meta property="og:site_name" content="peoples.ru">
+    <meta property="og:locale" content="ru_RU">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?>">
+    <meta name="twitter:description" content="<?= htmlspecialchars($pageDesc, ENT_QUOTES, 'UTF-8') ?>">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "peoples.ru", "item": "https://www.peoples.ru"},
+            {"@type": "ListItem", "position": 2, "name": "Приглашения", "item": "https://in.peoples.ru/booking/"},
+            {"@type": "ListItem", "position": 3, "name": <?= json_encode($catName, JSON_UNESCAPED_UNICODE) ?>, "item": <?= json_encode($canonicalUrl, JSON_UNESCAPED_UNICODE) ?>}
+        ]
+    }
+    </script>
 </head>
 <body>
 
@@ -157,7 +181,7 @@ header('Content-Type: text/html; charset=UTF-8');
                                 <i class="bi bi-person-lines-fill me-1"></i>Профиль
                             </a>
                             <?php endif; ?>
-                            <a href="/booking/person/<?= (int)$p['person_id'] ?>/#booking-form" class="btn btn-sm btn-brand flex-fill">Пригласить</a>
+                            <a href="/booking/person/<?= htmlspecialchars(!empty($p['path']) ? $p['path'] : (string)(int)$p['person_id'], ENT_QUOTES, 'UTF-8') ?>/#booking-form" class="btn btn-sm btn-brand flex-fill">Пригласить</a>
                         </div>
                     </div>
                 </div>

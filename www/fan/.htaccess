@@ -1,0 +1,4 @@
+RewriteEngine On
+
+# /fan/{slug}/ → index.php?slug={slug}
+RewriteRule ^([a-zA-Z0-9_-]+)/?$ index.php?slug=$1 [L,QSA]

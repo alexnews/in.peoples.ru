@@ -363,6 +363,43 @@
     color: #fff;
 }
 
+/* Fan club hero */
+.fan-hero {
+    background: linear-gradient(135deg, #1a1a2e 0%, #e94560 50%, #0f3460 100%);
+    color: #fff;
+    padding: 40px 0;
+}
+
+.fan-hero .person-photo {
+    width: 200px;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.fan-hero .person-photo-placeholder {
+    width: 200px;
+    height: 250px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    color: rgba(255,255,255,0.5);
+}
+
+.fan-hero h1 {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.fan-count-badge {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .booking-hero { padding: 40px 0; }
@@ -378,4 +415,8 @@
     .info-change-hero h1 { font-size: 1.6rem; }
     .adv-hero { padding: 40px 0; }
     .adv-hero h1 { font-size: 1.6rem; }
+    .fan-hero { padding: 30px 0; }
+    .fan-hero h1 { font-size: 1.6rem; }
+    .fan-hero .person-photo,
+    .fan-hero .person-photo-placeholder { width: 150px; height: 190px; }
 }
