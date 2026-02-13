@@ -3,10 +3,9 @@
 declare(strict_types=1);
 
 /**
- * Fan Club Landing Page — /fan/{slug}/
+ * Fan Club Index — /fan/
  *
- * Rich person page with content links, fan signup form, SEO tags.
- * Works for both living and deceased persons.
+ * Lists persons with fan clubs, sorted by number of confirmed fans.
  */
 
 require_once __DIR__ . '/../includes/db.php';
@@ -14,95 +13,46 @@ require_once __DIR__ . '/../includes/encoding.php';
 
 $db = getDb();
 
-// Accept slug (path-based or numeric ID)
-$slug = trim($_GET['slug'] ?? '');
-if ($slug === '') {
-    http_response_code(404);
-    echo '404 — Не найдено';
-    exit;
-}
+// Pagination
+$page    = max(1, (int) ($_GET['page'] ?? 1));
+$perPage = 24;
+$offset  = ($page - 1) * $perPage;
 
-// Resolve person ID: numeric → lookup by Persons_id, string → lookup by persons.path
-if (ctype_digit($slug)) {
-    $personId = (int) $slug;
-} else {
-    $pathStmt = $db->prepare('SELECT Persons_id FROM persons WHERE path = :path LIMIT 1');
-    $pathStmt->execute([':path' => toDb($slug)]);
-    $personId = (int) $pathStmt->fetchColumn();
-    if ($personId <= 0) {
-        http_response_code(404);
-        echo '404 — Не найдено';
-        exit;
-    }
-}
-
-// Fetch person
-$pStmt = $db->prepare(
-    'SELECT Persons_id, FullNameRus, FullNameEngl, NamePhoto, AllUrlInSity,
-            DateIn, DateOut, Epigraph, famous_for, gender, path
-     FROM persons
-     WHERE Persons_id = :pid'
+// Total fan clubs (persons with at least 1 member)
+$countStmt = $db->query(
+    'SELECT COUNT(DISTINCT person_id) FROM user_fan_club_members'
 );
-$pStmt->execute([':pid' => $personId]);
-$person = $pStmt->fetch();
+$total = (int) $countStmt->fetchColumn();
+$totalPages = $perPage > 0 ? (int) ceil($total / $perPage) : 0;
 
-if (!$person) {
-    http_response_code(404);
-    echo '404 — Не найдено';
-    exit;
-}
-$person = fromDbArray($person);
+// Persons with fan clubs, ordered by confirmed fan count
+$sql = "SELECT p.Persons_id, p.FullNameRus, p.FullNameEngl, p.NamePhoto,
+               p.AllUrlInSity, p.famous_for, p.path, p.DateOut,
+               COUNT(CASE WHEN fcm.status = 'confirmed' THEN 1 END) AS fan_count,
+               COUNT(*) AS total_members
+        FROM user_fan_club_members fcm
+        INNER JOIN persons p ON p.Persons_id = fcm.person_id
+        GROUP BY p.Persons_id
+        ORDER BY fan_count DESC, total_members DESC
+        LIMIT :limit OFFSET :offset";
 
-// 301 redirect from numeric ID to path-based URL
-$personSlug = $person['path'] ?? '';
-if ($personSlug !== '' && ctype_digit($slug)) {
-    header('Location: /fan/' . $personSlug . '/', true, 301);
-    exit;
-}
+$stmt = $db->prepare($sql);
+$stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+$stmt->execute();
+$clubs = fromDbRows($stmt->fetchAll());
 
-$personName = $person['FullNameRus'] ?? '';
-$personNameEng = $person['FullNameEngl'] ?? '';
-$personPhoto = $person['NamePhoto'] ?? '';
-$personPath = $person['AllUrlInSity'] ?? '';
-$personEpigraph = $person['Epigraph'] ?? '';
-$famousFor = $person['famous_for'] ?? '';
-$isDeceased = !empty($person['DateOut']);
-
-// Calculate age
-$age = '';
-if (!empty($person['DateIn'])) {
-    try {
-        $birthDate = new DateTime($person['DateIn']);
-        $now = new DateTime();
-        $diff = $now->diff($birthDate);
-        $age = $diff->y;
-    } catch (Exception $e) {
-        $age = '';
-    }
-}
-
-// Fan count
-$fanStmt = $db->prepare(
-    "SELECT COUNT(*) FROM user_fan_club_members WHERE person_id = :pid AND status = 'confirmed'"
+// Global stats
+$statsStmt = $db->query(
+    "SELECT COUNT(DISTINCT person_id) AS club_count,
+            SUM(status = 'confirmed') AS total_fans
+     FROM user_fan_club_members"
 );
-$fanStmt->execute([':pid' => $personId]);
-$fanCount = (int) $fanStmt->fetchColumn();
+$stats = $statsStmt->fetch();
 
-// Check if person is in booking system
-$bookingStmt = $db->prepare(
-    'SELECT 1 FROM booking_persons WHERE person_id = :pid AND is_active = 1 LIMIT 1'
-);
-$bookingStmt->execute([':pid' => $personId]);
-$isInBooking = (bool) $bookingStmt->fetch();
-
-$fanClubTitle = $isDeceased ? "Фан-клуб памяти: {$personName}" : "Фан-клуб: {$personName}";
-$pageTitle = $fanClubTitle;
-$pageDesc = $famousFor
-    ? "{$fanClubTitle}. {$famousFor}. peoples.ru"
-    : "{$fanClubTitle}. Вступите в фан-клуб на peoples.ru";
-$canonicalSlug = $personSlug !== '' ? $personSlug : (string)$personId;
-$canonicalUrl = 'https://in.peoples.ru/fan/' . $canonicalSlug . '/';
-$ogImage = !empty($personPhoto) ? ($personPath . $personPhoto) : 'https://www.peoples.ru/img/og-default.jpg';
+$pageTitle = 'Фан-клубы знаменитостей';
+$pageDesc = 'Фан-клубы знаменитостей на peoples.ru. Вступите в фан-клуб любимой знаменитости — получайте новости и будьте частью сообщества.';
+$canonicalUrl = 'https://in.peoples.ru/fan/';
 
 header('Content-Type: text/html; charset=UTF-8');
 ?>
@@ -125,38 +75,35 @@ header('Content-Type: text/html; charset=UTF-8');
     <meta property="og:url" content="<?= htmlspecialchars($canonicalUrl, ENT_QUOTES, 'UTF-8') ?>">
     <meta property="og:site_name" content="peoples.ru">
     <meta property="og:locale" content="ru_RU">
-    <meta property="og:image" content="<?= htmlspecialchars($ogImage, ENT_QUOTES, 'UTF-8') ?>">
-    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="<?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?>">
     <meta name="twitter:description" content="<?= htmlspecialchars($pageDesc, ENT_QUOTES, 'UTF-8') ?>">
 
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
-        "@type": "Person",
-        "name": <?= json_encode($personName, JSON_UNESCAPED_UNICODE) ?>,
+        "@type": "CollectionPage",
+        "name": <?= json_encode($pageTitle, JSON_UNESCAPED_UNICODE) ?>,
+        "description": <?= json_encode($pageDesc, JSON_UNESCAPED_UNICODE) ?>,
         "url": <?= json_encode($canonicalUrl, JSON_UNESCAPED_UNICODE) ?>
-        <?php if (!empty($personPhoto)): ?>
-        ,"image": <?= json_encode($personPath . $personPhoto, JSON_UNESCAPED_UNICODE) ?>
-        <?php endif; ?>
-        <?php if ($famousFor): ?>
-        ,"description": <?= json_encode($famousFor, JSON_UNESCAPED_UNICODE) ?>
-        <?php endif; ?>
-    }
-    </script>
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-            {"@type": "ListItem", "position": 1, "name": "peoples.ru", "item": "https://www.peoples.ru"},
-            {"@type": "ListItem", "position": 2, "name": "Фан-клуб", "item": "https://in.peoples.ru/fan/"},
-            {"@type": "ListItem", "position": 3, "name": <?= json_encode($personName, JSON_UNESCAPED_UNICODE) ?>, "item": <?= json_encode($canonicalUrl, JSON_UNESCAPED_UNICODE) ?>}
-        ]
     }
     </script>
 </head>
 <body>
+
+<!-- Hero -->
+<section class="fan-hero">
+    <div class="container text-center">
+        <h1 class="mb-3"><i class="bi bi-heart me-2"></i>Фан-клубы знаменитостей</h1>
+        <p class="lead opacity-75 mb-0">Вступите в фан-клуб любимой знаменитости на peoples.ru</p>
+        <?php if ((int)($stats['total_fans'] ?? 0) > 0): ?>
+        <div class="d-flex justify-content-center gap-4 mt-3">
+            <span class="fan-count-badge"><i class="bi bi-people me-1"></i><?= (int)$stats['club_count'] ?> фан-клубов</span>
+            <span class="fan-count-badge"><i class="bi bi-heart-fill me-1"></i><?= (int)$stats['total_fans'] ?> участников</span>
+        </div>
+        <?php endif; ?>
+    </div>
+</section>
 
 <!-- Breadcrumb -->
 <div class="bg-light py-2">
@@ -164,172 +111,86 @@ header('Content-Type: text/html; charset=UTF-8');
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-0 small">
                 <li class="breadcrumb-item"><a href="https://www.peoples.ru">peoples.ru</a></li>
-                <li class="breadcrumb-item active"><?= htmlspecialchars($personName, ENT_QUOTES, 'UTF-8') ?></li>
+                <li class="breadcrumb-item active">Фан-клубы</li>
             </ol>
         </nav>
     </div>
 </div>
 
-<!-- Hero -->
-<section class="fan-hero">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-auto">
-                <?php if (!empty($personPhoto)): ?>
-                    <img src="<?= htmlspecialchars($personPath . $personPhoto, ENT_QUOTES, 'UTF-8') ?>"
-                         class="person-photo" alt="<?= htmlspecialchars($personName, ENT_QUOTES, 'UTF-8') ?>">
-                <?php else: ?>
-                    <div class="person-photo-placeholder"><i class="bi bi-person"></i></div>
-                <?php endif; ?>
-            </div>
-            <div class="col">
-                <h1 class="mb-2"><?= htmlspecialchars($fanClubTitle, ENT_QUOTES, 'UTF-8') ?></h1>
-                <?php if ($personNameEng): ?>
-                    <p class="text-light mb-1 opacity-75"><?= htmlspecialchars($personNameEng, ENT_QUOTES, 'UTF-8') ?></p>
-                <?php endif; ?>
-
-                <?php if ($personEpigraph): ?>
-                    <p class="fst-italic opacity-75"><?= htmlspecialchars($personEpigraph, ENT_QUOTES, 'UTF-8') ?></p>
-                <?php endif; ?>
-
-                <?php if ($famousFor): ?>
-                    <p class="mb-2"><?= htmlspecialchars($famousFor, ENT_QUOTES, 'UTF-8') ?></p>
-                <?php endif; ?>
-
-                <div class="d-flex align-items-center gap-3 flex-wrap mb-3">
-                    <?php if ($age): ?>
-                        <span><i class="bi bi-calendar3 me-1"></i><?= $age ?> лет</span>
-                    <?php endif; ?>
-                    <span class="fan-count-badge">
-                        <i class="bi bi-people me-1"></i><?= $fanCount ?> <?= $fanCount === 1 ? 'участник' : ($fanCount >= 2 && $fanCount <= 4 ? 'участника' : 'участников') ?>
-                    </span>
-                </div>
-
-                <div class="d-flex gap-2 flex-wrap">
-                    <a href="#fan-form" class="btn btn-brand">
-                        <i class="bi bi-heart me-1"></i>Вступить в фан-клуб
-                    </a>
-                    <?php if ($personPath): ?>
-                    <a href="<?= htmlspecialchars($personPath, ENT_QUOTES, 'UTF-8') ?>"
-                       class="btn btn-outline-light" target="_blank" rel="noopener">
-                        <i class="bi bi-person-lines-fill me-1"></i>Профиль на peoples.ru
-                    </a>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Content links -->
+<!-- Fan clubs grid -->
 <section class="py-5">
     <div class="container">
-        <h2 class="text-center mb-4">Материалы о <?= htmlspecialchars($personName, ENT_QUOTES, 'UTF-8') ?></h2>
-        <div class="row g-3">
-            <?php if ($personPath): ?>
-            <div class="col-6 col-md-3">
-                <a href="<?= htmlspecialchars($personPath, ENT_QUOTES, 'UTF-8') ?>" class="category-card" target="_blank" rel="noopener">
-                    <div class="cat-icon"><i class="bi bi-book"></i></div>
-                    <div class="cat-name">Биография</div>
-                </a>
+        <?php if (empty($clubs)): ?>
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-heart" style="font-size: 4rem;"></i>
+                <p class="mt-3 fs-5">Фан-клубы пока не созданы.</p>
+                <p>Найдите любимую знаменитость на <a href="https://www.peoples.ru">peoples.ru</a> и создайте первый фан-клуб!</p>
             </div>
-            <div class="col-6 col-md-3">
-                <a href="<?= htmlspecialchars($personPath, ENT_QUOTES, 'UTF-8') ?>photo/" class="category-card" target="_blank" rel="noopener">
-                    <div class="cat-icon"><i class="bi bi-camera"></i></div>
-                    <div class="cat-name">Фотографии</div>
-                </a>
-            </div>
-            <div class="col-6 col-md-3">
-                <a href="<?= htmlspecialchars($personPath, ENT_QUOTES, 'UTF-8') ?>news/" class="category-card" target="_blank" rel="noopener">
-                    <div class="cat-icon"><i class="bi bi-newspaper"></i></div>
-                    <div class="cat-name">Новости</div>
-                </a>
-            </div>
-            <div class="col-6 col-md-3">
-                <a href="<?= htmlspecialchars($personPath, ENT_QUOTES, 'UTF-8') ?>quotes/" class="category-card" target="_blank" rel="noopener">
-                    <div class="cat-icon"><i class="bi bi-chat-quote"></i></div>
-                    <div class="cat-name">Цитаты</div>
-                </a>
-            </div>
-            <div class="col-6 col-md-3">
-                <a href="<?= htmlspecialchars($personPath, ENT_QUOTES, 'UTF-8') ?>poetry/" class="category-card" target="_blank" rel="noopener">
-                    <div class="cat-icon"><i class="bi bi-feather"></i></div>
-                    <div class="cat-name">Стихи</div>
-                </a>
-            </div>
-            <div class="col-6 col-md-3">
-                <a href="<?= htmlspecialchars($personPath, ENT_QUOTES, 'UTF-8') ?>songs/" class="category-card" target="_blank" rel="noopener">
-                    <div class="cat-icon"><i class="bi bi-music-note-beamed"></i></div>
-                    <div class="cat-name">Песни</div>
-                </a>
-            </div>
-            <div class="col-6 col-md-3">
-                <a href="<?= htmlspecialchars($personPath, ENT_QUOTES, 'UTF-8') ?>video/" class="category-card" target="_blank" rel="noopener">
-                    <div class="cat-icon"><i class="bi bi-play-circle"></i></div>
-                    <div class="cat-name">Видео</div>
-                </a>
-            </div>
-            <div class="col-6 col-md-3">
-                <a href="<?= htmlspecialchars($personPath, ENT_QUOTES, 'UTF-8') ?>facts/" class="category-card" target="_blank" rel="noopener">
-                    <div class="cat-icon"><i class="bi bi-lightbulb"></i></div>
-                    <div class="cat-name">Факты</div>
-                </a>
-            </div>
-            <?php endif; ?>
-        </div>
-    </div>
-</section>
-
-<!-- Fan signup form -->
-<section class="py-5 bg-light" id="fan-form">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-8 col-lg-6">
-                <h2 class="text-center mb-4">Вступить в фан-клуб</h2>
-                <p class="text-center text-muted mb-4">Получайте новости о <?= htmlspecialchars($personName, ENT_QUOTES, 'UTF-8') ?> и станьте частью сообщества поклонников.</p>
-                <div class="booking-form">
-                    <form class="fan-join-form">
-                        <input type="hidden" name="person_id" value="<?= $personId ?>">
-                        <div class="mb-3">
-                            <label class="form-label">Ваше имя <span class="text-danger">*</span></label>
-                            <input type="text" name="name" class="form-control" required>
+        <?php else: ?>
+            <div class="row g-4">
+                <?php foreach ($clubs as $club):
+                    $clubSlug = $club['path'] ?? '';
+                    $clubUrl = $clubSlug !== '' ? '/fan/' . $clubSlug . '/' : '/fan/' . (int)$club['Persons_id'] . '/';
+                    $photo = $club['NamePhoto'] ?? '';
+                    $profileUrl = $club['AllUrlInSity'] ?? '';
+                    $name = $club['FullNameRus'] ?? '';
+                    $nameEng = $club['FullNameEngl'] ?? '';
+                    $isDeceased = !empty($club['DateOut']);
+                    $fanCount = (int)($club['fan_count'] ?? 0);
+                ?>
+                <div class="col-6 col-md-4 col-lg-3">
+                    <a href="<?= htmlspecialchars($clubUrl, ENT_QUOTES, 'UTF-8') ?>" class="card card-hover text-decoration-none h-100">
+                        <div class="text-center pt-3">
+                            <?php if ($photo && $profileUrl): ?>
+                                <img src="<?= htmlspecialchars($profileUrl . $photo, ENT_QUOTES, 'UTF-8') ?>"
+                                     alt="<?= htmlspecialchars($name, ENT_QUOTES, 'UTF-8') ?>"
+                                     style="width: 120px; height: 150px; object-fit: cover; border-radius: 8px;">
+                            <?php else: ?>
+                                <div style="width: 120px; height: 150px; border-radius: 8px; background: #e9ecef; display: inline-flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-person" style="font-size: 3rem; color: #adb5bd;"></i>
+                                </div>
+                            <?php endif; ?>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Email <span class="text-danger">*</span></label>
-                            <input type="email" name="email" class="form-control" required>
+                        <div class="card-body text-center">
+                            <h6 class="card-title mb-1"><?= htmlspecialchars($name, ENT_QUOTES, 'UTF-8') ?></h6>
+                            <?php if ($nameEng): ?>
+                                <small class="text-muted d-block mb-2"><?= htmlspecialchars($nameEng, ENT_QUOTES, 'UTF-8') ?></small>
+                            <?php endif; ?>
+                            <span class="badge bg-danger"><i class="bi bi-heart-fill me-1"></i><?= $fanCount ?></span>
+                            <?php if ($isDeceased): ?>
+                                <span class="badge bg-secondary ms-1">in memoriam</span>
+                            <?php endif; ?>
                         </div>
-                        <div class="mb-4">
-                            <label class="form-label">Сообщение (необязательно)</label>
-                            <textarea name="message" class="form-control" rows="3"
-                                      placeholder="Почему вы являетесь поклонником..."></textarea>
-                        </div>
-                        <!-- Honeypot -->
-                        <div class="booking-hp">
-                            <input type="text" name="website" tabindex="-1" autocomplete="off">
-                        </div>
-                        <button type="submit" class="btn btn-brand btn-lg w-100">
-                            <i class="bi bi-heart me-1"></i>Вступить
-                        </button>
-                        <div class="form-result mt-3" style="display:none;"></div>
-                    </form>
+                    </a>
                 </div>
+                <?php endforeach; ?>
             </div>
-        </div>
-    </div>
-</section>
 
-<?php if (!$isDeceased && $isInBooking): ?>
-<!-- Booking CTA -->
-<section class="booking-register-cta">
-    <div class="container text-center">
-        <h2>Хотите пригласить <?= htmlspecialchars($personName, ENT_QUOTES, 'UTF-8') ?>?</h2>
-        <p>Оставьте заявку на приглашение через наш сервис.</p>
-        <a href="/booking/person/<?= htmlspecialchars($canonicalSlug, ENT_QUOTES, 'UTF-8') ?>/" class="btn btn-brand btn-lg">
-            <i class="bi bi-envelope me-1"></i>Пригласить
-        </a>
+            <!-- Pagination -->
+            <?php if ($totalPages > 1): ?>
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
+                        <a class="page-link" href="?page=<?= $page - 1 ?>">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    <?php for ($i = max(1, $page - 3); $i <= min($totalPages, $page + 3); $i++): ?>
+                    <li class="page-item <?= $i === $page ? 'active' : '' ?>">
+                        <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
+                    </li>
+                    <?php endfor; ?>
+                    <li class="page-item <?= $page >= $totalPages ? 'disabled' : '' ?>">
+                        <a class="page-link" href="?page=<?= $page + 1 ?>">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <?php endif; ?>
+        <?php endif; ?>
     </div>
 </section>
-<?php endif; ?>
 
 <!-- Footer -->
 <footer class="bg-dark text-light py-4 mt-auto">
@@ -341,6 +202,5 @@ header('Content-Type: text/html; charset=UTF-8');
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/assets/js/booking.js"></script>
 </body>
 </html>
